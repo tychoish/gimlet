@@ -1,4 +1,4 @@
-package gimlit
+package gimlet
 
 import (
 	"fmt"

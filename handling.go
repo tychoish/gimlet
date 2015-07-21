@@ -11,7 +11,7 @@ func (self *apiRoute) Handler(h http.HandlerFunc) *apiRoute {
 	return self
 }
 
-func writeJSONResponse(w http.ResponseWriter, code int, data interface{}) {
+func WriteJSONResponse(w http.ResponseWriter, code int, data interface{}) {
 	out, err := json.MarshalIndent(data, "", "  ")
 
 	if err != nil {
@@ -27,20 +27,20 @@ func writeJSONResponse(w http.ResponseWriter, code int, data interface{}) {
 
 func WriteJSON(w http.ResponseWriter, data interface{}) {
 	// 200
-	writeJSONResponse(w, http.StatusOK, data)
+	WriteJSONResponse(w, http.StatusOK, data)
 }
 
 func WriteErrorJSON(w http.ResponseWriter, data interface{}) {
 	// 400
-	writeJSONResponse(w, http.StatusBadRequest, data)
+	WriteJSONResponse(w, http.StatusBadRequest, data)
 }
 
 func WriteInternalErrorJSON(w http.ResponseWriter, data interface{}) {
 	// 500
-	writeJSONResponse(w, http.StatusInternalServerError, data)
+	WriteJSONResponse(w, http.StatusInternalServerError, data)
 }
 
-func GetJSON(r *http.Request, data interface{}) {
+func GetJSON(r *http.Request, data interface{}) error {
 	d := json.NewDecoder(r.Body)
-	d.Decode(data)
+	return d.Decode(data)
 }
