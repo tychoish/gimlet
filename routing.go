@@ -25,7 +25,6 @@ func (self *ApiApp) AddRoute(r string) *ApiRoute {
 func (self *ApiApp) Resolve() *mux.Router {
 	router := mux.NewRouter()
 	self.router = router
-	router.StrictSlash(self.strictSlash)
 
 	for _, route := range self.routes {
 		if !route.IsValid() {
@@ -41,14 +40,33 @@ func (self *ApiApp) Resolve() *mux.Router {
 
 		if route.version > 0 {
 			versionedRoute := fmt.Sprintf("/v%d%s", route.version, route.route)
-
 			router.HandleFunc(versionedRoute, route.handler).Methods(methods...)
 			grip.Debugln("added route for:", versionedRoute)
+
+			if self.strictSlash {
+				if strings.HasSuffix(versionedRoute, "/") {
+					versionedRoute = strings.TrimRight(versionedRoute, "/")
+				} else {
+					versionedRoute = versionedRoute + "/"
+				}
+				router.HandleFunc(versionedRoute, route.handler).Methods(methods...)
+			}
 		}
 
 		if route.version == self.defaultVersion || route.version == 0 {
 			router.HandleFunc(route.route, route.handler).Methods(methods...)
 			grip.Debugln("added route for:", route.route)
+
+			if self.strictSlash {
+				var newRoute string
+				if strings.HasSuffix(route.route, "/") {
+					newRoute = strings.TrimRight(route.route, "/")
+				} else {
+					newRoute = route.route + "/"
+				}
+				router.HandleFunc(newRoute, route.handler).Methods(methods...)
+			}
+
 		}
 	}
 
