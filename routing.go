@@ -9,8 +9,8 @@ import (
 	"github.com/tychoish/grip"
 )
 
-func (self *ApiApp) AddRoute(r string) *apiRoute {
-	route := &apiRoute{route: r, version: -1}
+func (self *ApiApp) AddRoute(r string) *ApiRoute {
+	route := &ApiRoute{route: r, version: -1}
 
 	// data validation and cleanup
 	if !strings.HasPrefix(route.route, "/") {
