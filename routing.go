@@ -10,7 +10,7 @@ import (
 )
 
 func (self *ApiApp) AddRoute(r string) *apiRoute {
-	route := &apiRoute{route: r, version: invalidVersion}
+	route := &apiRoute{route: r, version: -1}
 
 	// data validation and cleanup
 	if !strings.HasPrefix(route.route, "/") {
@@ -25,6 +25,7 @@ func (self *ApiApp) AddRoute(r string) *apiRoute {
 func (self *ApiApp) Resolve() *mux.Router {
 	router := mux.NewRouter()
 	self.router = router
+	router.StrictSlash(self.strictSlash)
 
 	for _, route := range self.routes {
 		if !route.IsValid() {
@@ -38,14 +39,14 @@ func (self *ApiApp) Resolve() *mux.Router {
 			methods = append(methods, strings.ToLower(m.String()))
 		}
 
-		if route.version != None {
-			versionedRoute := fmt.Sprint("/", strings.ToLower(route.version.String()), route.route)
+		if route.version > 0 {
+			versionedRoute := fmt.Sprintf("/v%d%s", route.version, route.route)
 
 			router.HandleFunc(versionedRoute, route.handler).Methods(methods...)
-			grip.Debugf("added route for:", versionedRoute)
+			grip.Debugln("added route for:", versionedRoute)
 		}
 
-		if route.version == self.defaultVersion || route.version == None {
+		if route.version == self.defaultVersion || route.version == 0 {
 			router.HandleFunc(route.route, route.handler).Methods(methods...)
 			grip.Debugln("added route for:", route.route)
 		}

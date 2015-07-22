@@ -45,73 +45,54 @@ func (self *apiRoute) Patch() *apiRoute {
 
 type ApiApp struct {
 	routes         []*apiRoute
-	defaultVersion apiVersion
+	defaultVersion int
 	isResolved     bool
 	router         *mux.Router
 	port           int
+	strictSlash    bool
 }
 
-//go:generate stringer -type=apiVersion
-type apiVersion int
-
-const (
-	invalidVersion            = -1
-	None           apiVersion = iota
-	V1
-	V2
-	V3
-	V4
-	V5
-	V6
-	V7
-	V8
-	V9
-	V10
-	v11
-	v12
-)
-
 func (self *apiRoute) IsValid() bool {
-	if self.version > 12 || self.version < 0 {
-		return false
-	} else {
+	if self.version >= 0 {
 		return true
+	} else {
+		return false
 	}
 }
 
 // specify either an integer or api version constant. Versions are
 // validated in the Resolve() method. Invalid input is ignored
-func (self *apiRoute) Version(v interface{}) *apiRoute {
-	switch v := v.(type) {
-	case int:
-		self.version = apiVersion(v)
-	case apiVersion:
-		self.version = v
+func (self *apiRoute) Version(version int) *apiRoute {
+	if version < 0 {
+		grip.Warningf("%d is not a valid version", version)
+	} else {
+		self.version = version
 	}
-
 	return self
 }
 
-func (self *ApiApp) SetDefaultVersion(v interface{}) {
-	switch v := v.(type) {
-	case int:
-		self.defaultVersion = apiVersion(v)
-	case apiVersion:
-		self.defaultVersion = v
+func (self *ApiApp) SetDefaultVersion(version int) {
+	if version < 0 {
+		grip.Warningf("%d is not a valid version", version)
+	} else {
+		self.defaultVersion = version
+		grip.Noticef("Set default api version to /v%d/", version)
 	}
+
 }
 
 type apiRoute struct {
 	route   string
 	methods []httpMethod
 	handler http.HandlerFunc
-	version apiVersion
+	version int
 }
 
 func NewApp() *ApiApp {
 	return &ApiApp{
 		defaultVersion: 0, // this is the same as having no version prepended to the path.
-		port:           3000,
+		port:           8889,
+		strictSlash:    true,
 	}
 }
 
@@ -139,6 +120,15 @@ func (self *ApiApp) SetPort(port int) (err error) {
 	}
 }
 
+// Sets the trailing slash behavior to pass to the `mux` layer. When
+// `true`, routes with and without trailing slashes resolve to the
+// same target. When `false`, the trailing slash is meaningful. The
+// default value for Gimlet apps is `true`, and this method should be
+// replaced with something more reasonable in the future.
+func (self *ApiApp) SetStrictSlash(v bool) {
+	self.strictSlash = v
+}
+
 func (self *ApiApp) Run() error {
 	if self.isResolved == false {
 		self.Resolve()
@@ -148,5 +138,6 @@ func (self *ApiApp) Run() error {
 	n.UseHandler(self.router)
 
 	listenOn := ":" + strconv.Itoa(self.port)
+	grip.Noticeln("starting app on:", listenOn)
 	return http.ListenAndServe(listenOn, n)
 }

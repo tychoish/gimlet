@@ -13,7 +13,7 @@ type appLogging struct {
 }
 
 func newAppLogger() *appLogging {
-	l := &appLogging{grip.NewJournaler("gimlet+negroni")}
+	l := &appLogging{grip.NewJournaler("gimlet")}
 
 	// default to whatever grip's standard logger does.
 	l.PreferFallback = grip.PrefersFallback()
