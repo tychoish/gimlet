@@ -23,35 +23,35 @@ const (
 
 // Chainable method to add a handler for the GET method to the
 // current route. Routes may specify multiple methods.
-func (self *ApiRoute) Get() *apiRoute {
+func (self *ApiRoute) Get() *ApiRoute {
 	self.methods = append(self.methods, GET)
 	return self
 }
 
 // Chainable method to add a handler for the PUT method to the
 // current route. Routes may specify multiple methods.
-func (self *ApiRoute) Put() *apiRoute {
+func (self *ApiRoute) Put() *ApiRoute {
 	self.methods = append(self.methods, PUT)
 	return self
 }
 
 // Chainable method to add a handler for the POST method to the
 // current route. Routes may specify multiple methods.
-func (self *ApiRoute) Post() *apiRoute {
+func (self *ApiRoute) Post() *ApiRoute {
 	self.methods = append(self.methods, POST)
 	return self
 }
 
 // Chainable method to add a handler for the DELETE method to the
 // current route. Routes may specify multiple methods.
-func (self *ApiRoute) Delete() *apiRoute {
+func (self *ApiRoute) Delete() *ApiRoute {
 	self.methods = append(self.methods, DELETE)
 	return self
 }
 
 // Chainable method to add a handler for the PATCH method to the
 // current route. Routes may specify multiple methods.
-func (self *ApiRoute) Patch() *apiRoute {
+func (self *ApiRoute) Patch() *ApiRoute {
 	self.methods = append(self.methods, PATCH)
 	return self
 }
@@ -132,7 +132,7 @@ func (self *ApiRoute) IsValid() bool {
 }
 
 // Specify an integer for the version of this route.
-func (self *ApiRoute) Version(version int) *apiRoute {
+func (self *ApiRoute) Version(version int) *ApiRoute {
 	if version < 0 {
 		grip.Warningf("%d is not a valid version", version)
 	} else {

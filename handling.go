@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func (self *ApiRoute) Handler(h http.HandlerFunc) *apiRoute {
+func (self *ApiRoute) Handler(h http.HandlerFunc) *ApiRoute {
 	self.handler = h
 
 	return self
