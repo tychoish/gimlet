@@ -8,12 +8,21 @@ import (
 	"github.com/tychoish/grip"
 )
 
-type appLogging struct {
+// Negroni-compatible middlewear to send all logging using the grip
+// packages logging. This defaults to using systemd logging, but
+// gracefully falls back to use go standard library logging, with some
+// additional helpers and configurations to support configurable
+// level-based logging. This particular middlewear resembles the basic
+// tracking provided by Negroni's standard logging system.
+type AppLogging struct {
 	*grip.Journaler
 }
 
-func newAppLogger() *appLogging {
-	l := &appLogging{grip.NewJournaler("gimlet")}
+// Creates an logging middlear instance suitable for use with
+// Negroni. Sets the logging configuration to be the same as the
+// default global grip logging object.
+func NewAppLogger() *AppLogging {
+	l := &AppLogging{grip.NewJournaler("gimlet")}
 
 	// default to whatever grip's standard logger does.
 	l.PreferFallback = grip.PrefersFallback()
@@ -21,7 +30,9 @@ func newAppLogger() *appLogging {
 	return l
 }
 
-func (self *appLogging) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+// Logs the request path, the beginning of every request as well as the duration upon
+// completion and the status of the response.
+func (self *AppLogging) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	start := time.Now()
 	self.Infof("Started %s %s", r.Method, r.URL.Path)
 

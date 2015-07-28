@@ -9,6 +9,38 @@ import (
 	"github.com/tychoish/grip"
 )
 
+// Represents each route in the application and includes the route and
+// associate internal metadata for the route.
+type ApiRoute struct {
+	route   string
+	methods []httpMethod
+	handler http.HandlerFunc
+	version int
+}
+
+// Checks if a route has is valid. Current implementation only makes
+// sure that the version of the route is method.
+func (self *ApiRoute) IsValid() bool {
+	if self.version >= 0 {
+		return true
+	} else {
+		return false
+	}
+}
+
+// Specify an integer for the version of this route.
+func (self *ApiRoute) Version(version int) *ApiRoute {
+	if version < 0 {
+		grip.Warningf("%d is not a valid version", version)
+	} else {
+		self.version = version
+	}
+	return self
+}
+
+// Primary method for creating and registering a new route with an
+// application. Use as the root of a method chain, passing this method
+// the path of the route.
 func (self *ApiApp) AddRoute(r string) *ApiRoute {
 	route := &ApiRoute{route: r, version: -1}
 
@@ -22,6 +54,7 @@ func (self *ApiApp) AddRoute(r string) *ApiRoute {
 	return route
 }
 
+// Processes the data in an application and creats a mux.Router object.
 func (self *ApiApp) Resolve() *mux.Router {
 	router := mux.NewRouter()
 	self.router = router
@@ -75,6 +108,9 @@ func (self *ApiApp) Resolve() *mux.Router {
 	return router
 }
 
+// Processes an http.Request and returns a map of strings to decoded
+// strings for all arguments passed to the method in the URL. Use this
+// helper function when writing handler functions.
 func GetVars(r *http.Request) map[string]string {
 	return mux.Vars(r)
 }

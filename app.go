@@ -1,3 +1,13 @@
+// Gimlet is a toolkit for building JSON/HTTP interfaces (e.g. REST).
+//
+// Gimlet builds on standard library and common tools for building web
+// applciations (e.g. Negroni and gorilla,) and is only concerned with
+// JSON/HTTP interfaces, and omits support for aspects of HTTP
+// applications outside of the scope of JSON APIs (e.g. templating,
+// sessions.) Gimilet attempts to provide minimal convinences on top
+// of great infrastucture so that your application can omit
+// boilerplate and you don't have to build potentially redundant
+// infrastructure.
 package gimlet
 
 import (
@@ -9,52 +19,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/tychoish/grip"
 )
-
-//go:generate stringer -type=httpMethod
-type httpMethod int
-
-const (
-	GET httpMethod = iota
-	PUT
-	POST
-	DELETE
-	PATCH
-)
-
-// Chainable method to add a handler for the GET method to the
-// current route. Routes may specify multiple methods.
-func (self *ApiRoute) Get() *ApiRoute {
-	self.methods = append(self.methods, GET)
-	return self
-}
-
-// Chainable method to add a handler for the PUT method to the
-// current route. Routes may specify multiple methods.
-func (self *ApiRoute) Put() *ApiRoute {
-	self.methods = append(self.methods, PUT)
-	return self
-}
-
-// Chainable method to add a handler for the POST method to the
-// current route. Routes may specify multiple methods.
-func (self *ApiRoute) Post() *ApiRoute {
-	self.methods = append(self.methods, POST)
-	return self
-}
-
-// Chainable method to add a handler for the DELETE method to the
-// current route. Routes may specify multiple methods.
-func (self *ApiRoute) Delete() *ApiRoute {
-	self.methods = append(self.methods, DELETE)
-	return self
-}
-
-// Chainable method to add a handler for the PATCH method to the
-// current route. Routes may specify multiple methods.
-func (self *ApiRoute) Patch() *ApiRoute {
-	self.methods = append(self.methods, PATCH)
-	return self
-}
 
 // A structure representing a single API service
 type ApiApp struct {
@@ -104,41 +68,12 @@ func (self *ApiApp) Run() error {
 		self.Resolve()
 	}
 
-	n := negroni.New(negroni.NewRecovery(), newAppLogger())
+	n := negroni.New(negroni.NewRecovery(), NewAppLogger())
 	n.UseHandler(self.router)
 
 	listenOn := ":" + strconv.Itoa(self.port)
 	grip.Noticeln("starting app on:", listenOn)
 	return http.ListenAndServe(listenOn, n)
-}
-
-// Represents each route in the application and includes the route and
-// associate internal metadata for the route.
-type ApiRoute struct {
-	route   string
-	methods []httpMethod
-	handler http.HandlerFunc
-	version int
-}
-
-// Checks if a route has is valid. Current implementation only makes
-// sure that the version of the route is method.
-func (self *ApiRoute) IsValid() bool {
-	if self.version >= 0 {
-		return true
-	} else {
-		return false
-	}
-}
-
-// Specify an integer for the version of this route.
-func (self *ApiRoute) Version(version int) *ApiRoute {
-	if version < 0 {
-		grip.Warningf("%d is not a valid version", version)
-	} else {
-		self.version = version
-	}
-	return self
 }
 
 // Allows user to configure a default port for the API

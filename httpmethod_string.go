@@ -8,6 +8,8 @@ const _httpMethod_name = "GETPUTPOSTDELETEPATCH"
 
 var _httpMethod_index = [...]uint8{0, 3, 6, 10, 16, 21}
 
+// Returns the string form the httpMethod constants as needed for easy, logging, and
+// conversion/compatibility with other tools.
 func (i httpMethod) String() string {
 	if i < 0 || i >= httpMethod(len(_httpMethod_index)-1) {
 		return fmt.Sprintf("httpMethod(%d)", i)
