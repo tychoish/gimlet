@@ -3,7 +3,27 @@ package gimlet
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/tychoish/grip"
 )
+
+type jsonHandle struct {
+	data interface{}
+}
+
+func (self *jsonHandle) Send() string {
+	out, err := json.Marshal(self.data)
+	if err != nil {
+		grip.CatchWarning(err)
+		return ""
+	} else {
+		return string(out)
+	}
+}
+
+func (self *jsonHandle) MarshalPretty() ([]byte, error) {
+	return json.MarshalIndent(self.data, "", "  ")
+}
 
 // Register an http.HandlerFunc with a route. Chainable. The common
 // pattern for implementing these functions is to write functions and
@@ -21,7 +41,10 @@ func (self *ApiRoute) Handler(h http.HandlerFunc) *ApiRoute {
 // return status of to 500 if the JSON seralization process encounters
 // an error, otherwise return
 func WriteJSONResponse(w http.ResponseWriter, code int, data interface{}) {
-	out, err := json.MarshalIndent(data, "", "  ")
+	j := &jsonHandle{data: data}
+	grip.ComposeDebug(j)
+
+	out, err := j.MarshalPretty()
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -57,5 +80,12 @@ func WriteInternalErrorJSON(w http.ResponseWriter, data interface{}) {
 // submitted by the client.
 func GetJSON(r *http.Request, data interface{}) error {
 	d := json.NewDecoder(r.Body)
-	return d.Decode(data)
+
+	decodedData := d.Decode(data)
+
+	j := &jsonHandle{data: decodedData}
+
+	grip.ComposeDebug(j)
+
+	return decodedData
 }
