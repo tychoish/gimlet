@@ -41,6 +41,8 @@ func (self *ApiRoute) Handler(h http.HandlerFunc) *ApiRoute {
 // return status of to 500 if the JSON seralization process encounters
 // an error, otherwise return
 func WriteJSONResponse(w http.ResponseWriter, code int, data interface{}) {
+	j := &jsonHandle{data: data}
+
 	out, err := j.MarshalPretty()
 
 	if err != nil {
@@ -48,7 +50,6 @@ func WriteJSONResponse(w http.ResponseWriter, code int, data interface{}) {
 		return
 	}
 
-	j := &jsonHandle{data: data}
 	grip.ComposeDebug(j)
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
