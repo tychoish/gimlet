@@ -11,7 +11,7 @@ type jsonHandle struct {
 	data interface{}
 }
 
-func (self *jsonHandle) Send() string {
+func (self *jsonHandle) Resolve() string {
 	out, err := json.Marshal(self.data)
 	if err != nil {
 		grip.CatchWarning(err)
@@ -41,15 +41,15 @@ func (self *ApiRoute) Handler(h http.HandlerFunc) *ApiRoute {
 // return status of to 500 if the JSON seralization process encounters
 // an error, otherwise return
 func WriteJSONResponse(w http.ResponseWriter, code int, data interface{}) {
-	j := &jsonHandle{data: data}
-	grip.ComposeDebug(j)
-
 	out, err := j.MarshalPretty()
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	j := &jsonHandle{data: data}
+	grip.ComposeDebug(j)
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
