@@ -12,12 +12,14 @@ package gimlet
 
 import (
 	"fmt"
-	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
+	"github.com/phyber/negroni-gzip/gzip"
 	"github.com/tychoish/grip"
+	"github.com/tylerb/graceful"
 )
 
 // A structure representing a single API service
@@ -62,18 +64,26 @@ func (self *ApiApp) SetStrictSlash(v bool) {
 	self.strictSlash = v
 }
 
-// Run configured API service on the configured port.
+// Run configured API service on the configured port. Registers
+// middlewear for gziped responses and graceful shutdown with a 10
+// second timeout.
 func (self *ApiApp) Run() error {
 	if self.isResolved == false {
 		self.Resolve()
 	}
 
-	n := negroni.New(negroni.NewRecovery(), NewAppLogger())
+	n := negroni.New()
+	n.Use(negroni.NewRecovery())
+	n.Use(NewAppLogger())
+	n.Use(gzip.Gzip(gzip.DefaultCompression))
+
 	n.UseHandler(self.router)
 
 	listenOn := ":" + strconv.Itoa(self.port)
 	grip.Noticeln("starting app on:", listenOn)
-	return http.ListenAndServe(listenOn, n)
+
+	graceful.Run(listenOn, 10*time.Second, n)
+	return nil
 }
 
 // Allows user to configure a default port for the API
