@@ -21,6 +21,10 @@ func (self *jsonHandle) Resolve() string {
 	}
 }
 
+func (self *jsonHandle) Loggable() bool {
+	return true
+}
+
 func (self *jsonHandle) MarshalPretty() ([]byte, error) {
 	return json.MarshalIndent(self.data, "", "  ")
 }
