@@ -52,7 +52,6 @@ func (self *ApiApp) SetDefaultVersion(version int) {
 		self.defaultVersion = version
 		grip.Noticef("Set default api version to /v%d/", version)
 	}
-
 }
 
 // Sets the trailing slash behavior to pass to the `mux` layer. When

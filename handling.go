@@ -25,6 +25,10 @@ func (self *jsonHandle) Loggable() bool {
 	return true
 }
 
+func (self *jsonHandle) Raw() interface{} {
+	return self.data
+}
+
 func (self *jsonHandle) MarshalPretty() ([]byte, error) {
 	return json.MarshalIndent(self.data, "", "  ")
 }
