@@ -11,8 +11,10 @@
 package gimlet
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/codegangsta/negroni"
@@ -28,19 +30,28 @@ type ApiApp struct {
 	defaultVersion int
 	isResolved     bool
 	router         *mux.Router
+	address        string
 	port           int
 	strictSlash    bool
+	middleware     []negroni.Handler
 }
 
 // Returns a pointer to an application instance. These instances have
-// reasonable defaults. Users must specify a default version for new
-// methods.
+// reasonable defaults and include middleware to: recover from panics
+// in handlers, log information about the request, and gzip compress
+// all data. Users must specify a default version for new methods.
 func NewApp() *ApiApp {
-	return &ApiApp{
+	a := &ApiApp{
 		defaultVersion: -1, // this is the same as having no version prepended to the path.
 		port:           3000,
 		strictSlash:    true,
 	}
+
+	a.AddMiddleware(negroni.NewRecovery())
+	a.AddMiddleware(NewAppLogger())
+	a.AddMiddleware(gzip.Gzip(gzip.DefaultCompression))
+
+	return a
 }
 
 // Specifies a default version for the application. Default versions
@@ -54,6 +65,40 @@ func (self *ApiApp) SetDefaultVersion(version int) {
 	}
 }
 
+// Take one app and add its routes to the current app. Errors if the
+// current app is resolved. If the apps have different default
+// versions set, the versions on the second app are explicitly set.
+func (self *ApiApp) AddApp(app *ApiApp) error {
+	// if we've already resolved then it has to be an error
+	if self.isResolved {
+		return errors.New("cannot merge an app into a resolved app.")
+	}
+
+	// this is a weird case, so worth a warning, but not worth exiting
+	if app.isResolved {
+		grip.Warningln("merging a resolved app into an unresolved app may be an error.",
+			"Continuing cautiously.")
+	}
+	// this is incredibly straightforward, just add the added routes to our routes list.
+	if app.defaultVersion == self.defaultVersion {
+		self.routes = append(self.routes, app.routes...)
+		return nil
+	}
+
+	// This makes sure that instance default versions are
+	// respected in routes when merging instances. This covers the
+	// case where you assemble v1 and v2 of an api in different
+	// places in your code and want to merge them in later.
+	for _, route := range app.routes {
+		if route.version == 0 {
+			route.Version(app.defaultVersion)
+		}
+		self.routes = append(self.routes, route)
+	}
+
+	return nil
+}
+
 // Sets the trailing slash behavior to pass to the `mux` layer. When
 // `true`, routes with and without trailing slashes resolve to the
 // same target. When `false`, the trailing slash is meaningful. The
@@ -63,7 +108,18 @@ func (self *ApiApp) SetStrictSlash(v bool) {
 	self.strictSlash = v
 }
 
-// Run configured API service on the configured port. Registers
+// Adds a negroni handler as middleware to the end of the current list
+// of middleware handlers.
+func (self *ApiApp) AddMiddleware(m negroni.Handler) {
+	self.middleware = append(self.middleware, m)
+}
+
+// Removes *all* middleware handlers from the current application.
+func (self *ApiApp) ResetMiddleware() {
+	self.middleware = []negroni.Handler{}
+}
+
+// Run configured API service on the configured port. If you Registers
 // middlewear for gziped responses and graceful shutdown with a 10
 // second timeout.
 func (self *ApiApp) Run() error {
@@ -72,13 +128,13 @@ func (self *ApiApp) Run() error {
 	}
 
 	n := negroni.New()
-	n.Use(negroni.NewRecovery())
-	n.Use(NewAppLogger())
-	n.Use(gzip.Gzip(gzip.DefaultCompression))
+	for _, m := range self.middleware {
+		n.Use(m)
+	}
 
 	n.UseHandler(self.router)
 
-	listenOn := ":" + strconv.Itoa(self.port)
+	listenOn := strings.Join([]string{self.address, strconv.Itoa(self.port)}, ":")
 	grip.Noticeln("starting app on:", listenOn)
 
 	graceful.Run(listenOn, 10*time.Second, n)

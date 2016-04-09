@@ -1,6 +1,7 @@
 package gimlet
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -55,12 +56,14 @@ func (self *ApiApp) AddRoute(r string) *ApiRoute {
 }
 
 // Processes the data in an application and creats a mux.Router object.
-func (self *ApiApp) Resolve() *mux.Router {
-	router := mux.NewRouter()
+func (self *ApiApp) Resolve() (*mux.Router, error) {
+	router := mux.NewRouter().StrictSlash(self.strictSlash)
 	self.router = router
 
+	var hasErrs bool
 	for _, route := range self.routes {
 		if !route.IsValid() {
+			hasErrs = true
 			grip.Errorf("%d is an invalid api version. not adding route for %s",
 				route.version, route.route)
 			continue
@@ -76,36 +79,22 @@ func (self *ApiApp) Resolve() *mux.Router {
 			router.HandleFunc(versionedRoute, route.handler).Methods(methods...)
 			grip.Debugln("added route for:", versionedRoute)
 
-			if self.strictSlash {
-				if strings.HasSuffix(versionedRoute, "/") {
-					versionedRoute = strings.TrimRight(versionedRoute, "/")
-				} else {
-					versionedRoute = versionedRoute + "/"
-				}
-				router.HandleFunc(versionedRoute, route.handler).Methods(methods...)
-			}
 		}
 
 		if route.version == self.defaultVersion || route.version == 0 {
 			router.HandleFunc(route.route, route.handler).Methods(methods...)
 			grip.Debugln("added route for:", route.route)
 
-			if self.strictSlash {
-				var newRoute string
-				if strings.HasSuffix(route.route, "/") {
-					newRoute = strings.TrimRight(route.route, "/")
-				} else {
-					newRoute = route.route + "/"
-				}
-				router.HandleFunc(newRoute, route.handler).Methods(methods...)
-			}
-
 		}
 	}
 
 	self.isResolved = true
 
-	return router
+	if !hasErrs {
+		return router, nil
+	} else {
+		return router, errors.New("encountered errors resolving routes")
+	}
 }
 
 // Processes an http.Request and returns a map of strings to decoded
