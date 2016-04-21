@@ -56,9 +56,8 @@ func (self *ApiApp) AddRoute(r string) *ApiRoute {
 }
 
 // Processes the data in an application and creats a mux.Router object.
-func (self *ApiApp) Resolve() (*mux.Router, error) {
-	router := mux.NewRouter().StrictSlash(self.strictSlash)
-	self.router = router
+func (self *ApiApp) Resolve() error {
+	self.router = mux.NewRouter().StrictSlash(self.strictSlash)
 
 	var hasErrs bool
 	for _, route := range self.routes {
@@ -76,13 +75,12 @@ func (self *ApiApp) Resolve() (*mux.Router, error) {
 
 		if route.version > 0 {
 			versionedRoute := fmt.Sprintf("/v%d%s", route.version, route.route)
-			router.HandleFunc(versionedRoute, route.handler).Methods(methods...)
+			self.router.HandleFunc(versionedRoute, route.handler).Methods(methods...)
 			grip.Debugln("added route for:", versionedRoute)
-
 		}
 
 		if route.version == self.defaultVersion || route.version == 0 {
-			router.HandleFunc(route.route, route.handler).Methods(methods...)
+			self.router.HandleFunc(route.route, route.handler).Methods(methods...)
 			grip.Debugln("added route for:", route.route)
 
 		}
@@ -91,9 +89,9 @@ func (self *ApiApp) Resolve() (*mux.Router, error) {
 	self.isResolved = true
 
 	if !hasErrs {
-		return router, nil
+		return nil
 	} else {
-		return router, errors.New("encountered errors resolving routes")
+		return errors.New("encountered errors resolving routes")
 	}
 }
 

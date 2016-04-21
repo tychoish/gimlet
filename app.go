@@ -65,6 +65,14 @@ func (self *ApiApp) SetDefaultVersion(version int) {
 	}
 }
 
+func (self *ApiApp) Router() (*mux.Router, error) {
+	if self.isResolved {
+		return self.router, nil
+	} else {
+		return self.router, errors.New("application is not resolved")
+	}
+}
+
 // Take one app and add its routes to the current app. Errors if the
 // current app is resolved. If the apps have different default
 // versions set, the versions on the second app are explicitly set.
@@ -123,8 +131,9 @@ func (self *ApiApp) ResetMiddleware() {
 // middlewear for gziped responses and graceful shutdown with a 10
 // second timeout.
 func (self *ApiApp) Run() error {
+	var err error
 	if self.isResolved == false {
-		self.Resolve()
+		err = self.Resolve()
 	}
 
 	n := negroni.New()
@@ -138,7 +147,7 @@ func (self *ApiApp) Run() error {
 	grip.Noticeln("starting app on:", listenOn)
 
 	graceful.Run(listenOn, 10*time.Second, n)
-	return nil
+	return err
 }
 
 // Allows user to configure a default port for the API
