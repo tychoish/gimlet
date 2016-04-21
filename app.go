@@ -153,26 +153,23 @@ func (self *ApiApp) Run() error {
 // Allows user to configure a default port for the API
 // service. Defaults to 3000, and return errors will refuse to set the
 // port to something unreasonable.
-func (self *ApiApp) SetPort(port int) (err error) {
+func (self *ApiApp) SetPort(port int) error {
 	defaultPort := 3000
 
 	if port == self.port {
 		grip.Warningf("port is already set to %d", self.port)
-		return
 	} else if port <= 0 && self.port != defaultPort {
-		err = fmt.Errorf("%d is not a valid port numbaer, using %d", port, defaultPort)
 		self.port = defaultPort
-		return
+		return fmt.Errorf("%d is not a valid port numbaer, using %d", port, defaultPort)
 	} else if port > 65535 {
-		err = fmt.Errorf("port %d is too large, using default port (%d)", port, defaultPort)
 		self.port = defaultPort
-		return
+		return fmt.Errorf("port %d is too large, using default port (%d)", port, defaultPort)
 	} else if port < 1024 {
-		err = fmt.Errorf("port %d is too small, using default port (%d)", port, defaultPort)
 		self.port = defaultPort
-		return
+		return fmt.Errorf("port %d is too small, using default port (%d)", port, defaultPort)
 	} else {
 		self.port = port
-		return
 	}
+
+	return nil
 }
