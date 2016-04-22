@@ -7,11 +7,16 @@ import (
 	"github.com/tychoish/grip"
 )
 
-type jsonHandle struct {
+// JsonMessage is an implementation of the grip/message.Composer
+// interface, used so that we can log all incoming and outgoing Json
+// content in debug mode, without needing to serialize structs under
+// normal operation. Also contains a MarshalPretty() method which is
+// used in rendering JSON into the response objects.
+type JsonMessage struct {
 	data interface{}
 }
 
-func (self *jsonHandle) Resolve() string {
+func (self *JsonMessage) Resolve() string {
 	out, err := json.Marshal(self.data)
 	if err != nil {
 		grip.CatchWarning(err)
@@ -21,15 +26,23 @@ func (self *jsonHandle) Resolve() string {
 	}
 }
 
-func (self *jsonHandle) Loggable() bool {
+// In this implementation this is always true, but potentially, the
+// message can force itself to be *not* logable. May be useful in the
+// future to modify this form to suppress sensitive data.
+func (self *JsonMessage) Loggable() bool {
 	return true
 }
 
-func (self *jsonHandle) Raw() interface{} {
+// Return the data without seralizing it first. Useful for logging
+// mechanisms that handle a raw format for insertion into a database
+// or posting to a service.
+func (self *JsonMessage) Raw() interface{} {
 	return self.data
 }
 
-func (self *jsonHandle) MarshalPretty() ([]byte, error) {
+// A helper method to simplify calls to json.MarshalIndent(). This is
+// not part of the Composer interface.
+func (self *JsonMessage) MarshalPretty() ([]byte, error) {
 	return json.MarshalIndent(self.data, "", "  ")
 }
 
@@ -49,11 +62,12 @@ func (self *ApiRoute) Handler(h http.HandlerFunc) *ApiRoute {
 // return status of to 500 if the JSON seralization process encounters
 // an error, otherwise return
 func WriteJSONResponse(w http.ResponseWriter, code int, data interface{}) {
-	j := &jsonHandle{data: data}
+	j := &JsonMessage{data: data}
 
 	out, err := j.MarshalPretty()
 
 	if err != nil {
+		grip.CatchDebug(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -90,11 +104,9 @@ func WriteInternalErrorJSON(w http.ResponseWriter, data interface{}) {
 func GetJSON(r *http.Request, data interface{}) error {
 	d := json.NewDecoder(r.Body)
 
-	decodedData := d.Decode(data)
+	err := d.Decode(data)
+	grip.CatchDebug(err)
+	grip.ComposeDebug(&JsonMessage{data: data})
 
-	j := &jsonHandle{data: decodedData}
-
-	grip.ComposeDebug(j)
-
-	return decodedData
+	return err
 }

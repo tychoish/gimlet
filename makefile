@@ -1,5 +1,3 @@
-PACKAGES := ./
-
 deps:
 	go get github.com/codegangsta/negroni
 	go get github.com/gorilla/mux
@@ -8,15 +6,17 @@ deps:
 	go get github.com/tylerb/graceful
 
 test-deps:deps
-	go get -u gopkg.in/check.v1
+	go get gopkg.in/check.v1
+	go get github.com/alecthomas/gometalinter
+	gometalinter --install
 
 build:deps
 	go build -v
 
 lint:
-	gofmt -l $(PACKAGES)
-	go vet $(PACKAGES)
+	# gofmt -l ./...
+	# go vet ./...
+	gometalinter ./...
 
 test:build lint
-	go test -cover -v -check.v $(PACKAGES)
-
+	go test -cover -v -check.v ./...
