@@ -26,13 +26,13 @@ import (
 
 // APIApp is a structure representing a single API service.
 type APIApp struct {
-	routes         []*APIRoute
-	defaultVersion int
-	isResolved     bool
 	router         *mux.Router
-	address        string
-	port           int
 	strictSlash    bool
+	isResolved     bool
+	defaultVersion int
+	port           int
+	address        string
+	routes         []*APIRoute
 	middleware     []negroni.Handler
 }
 

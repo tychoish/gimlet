@@ -16,6 +16,8 @@ type JSONMessage struct {
 	data interface{}
 }
 
+// Resolve returns a string form of the message. Part of the Composer
+// interface.
 func (m *JSONMessage) Resolve() string {
 	out, err := json.Marshal(m.data)
 	if err != nil {
@@ -42,7 +44,9 @@ func (m *JSONMessage) Raw() interface{} {
 // A helper method to simplify calls to json.MarshalIndent(). This is
 // not part of the Composer interface.
 func (m *JSONMessage) MarshalPretty() ([]byte, error) {
-	return json.MarshalIndent(m.data, "", "  ")
+	response, err := json.MarshalIndent(m.data, "", "  ")
+	response = append(response, []byte("\n")...)
+	return response, err
 }
 
 // Register an http.HandlerFunc with a route. Chainable. The common
@@ -75,8 +79,12 @@ func WriteJSONResponse(w http.ResponseWriter, code int, data interface{}) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
-	w.Write(out)
-	w.Write([]byte("\n"))
+	size, err := w.Write(out)
+	if err == nil {
+		grip.Debugf("response object was %d", size)
+	} else {
+		grip.Warningf("encountered error %s writing a %d response", err.Error(), size)
+	}
 }
 
 // A helper method to write JSON data to the body of an HTTP request and return 200 (successful.)

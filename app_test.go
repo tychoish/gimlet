@@ -81,7 +81,8 @@ func (s *GimletSuite) TestPortSetterDoesNotAllowImpermisableValues(c *C) {
 
 func (s *GimletSuite) TestAddAppReturnsErrorIfOuterAppIsResolved(c *C) {
 	newApp := NewApp()
-	newApp.Resolve()
+	err := newApp.Resolve()
+	c.Assert(err, IsNil)
 	c.Assert(newApp.isResolved, Equals, true)
 
 	// if you attempt use AddApp on an app that is already
