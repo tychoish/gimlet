@@ -9,7 +9,7 @@ import (
 func TestGoCheckTests(t *testing.T) { TestingT(t) }
 
 type GimletSuite struct {
-	app *ApiApp
+	app *APIApp
 }
 
 var _ = Suite(&GimletSuite{})

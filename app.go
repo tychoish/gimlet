@@ -1,4 +1,4 @@
-// Gimlet is a toolkit for building JSON/HTTP interfaces (e.g. REST).
+// Package gimlet is a toolkit for building JSON/HTTP interfaces (e.g. REST).
 //
 // Gimlet builds on standard library and common tools for building web
 // applciations (e.g. Negroni and gorilla,) and is only concerned with
@@ -24,9 +24,9 @@ import (
 	"github.com/tylerb/graceful"
 )
 
-// A structure representing a single API service.
-type ApiApp struct {
-	routes         []*ApiRoute
+// APIApp is a structure representing a single API service.
+type APIApp struct {
+	routes         []*APIRoute
 	defaultVersion int
 	isResolved     bool
 	router         *mux.Router
@@ -40,8 +40,8 @@ type ApiApp struct {
 // reasonable defaults and include middleware to: recover from panics
 // in handlers, log information about the request, and gzip compress
 // all data. Users must specify a default version for new methods.
-func NewApp() *ApiApp {
-	a := &ApiApp{
+func NewApp() *APIApp {
+	a := &APIApp{
 		defaultVersion: -1, // this is the same as having no version prepended to the path.
 		port:           3000,
 		strictSlash:    true,
@@ -56,32 +56,31 @@ func NewApp() *ApiApp {
 
 // Specifies a default version for the application. Default versions
 // must be 0 (no version,) or larger.
-func (self *ApiApp) SetDefaultVersion(version int) {
+func (a *APIApp) SetDefaultVersion(version int) {
 	if version < 0 {
 		grip.Warningf("%d is not a valid version", version)
 	} else {
-		self.defaultVersion = version
+		a.defaultVersion = version
 		grip.Noticef("Set default api version to /v%d/", version)
 	}
 }
 
 // Returns the router object. If the application isn't resloved, then
 // the error return value is non-nil.
-func (self *ApiApp) Router() (*mux.Router, error) {
-	if self.isResolved {
-		return self.router, nil
-	} else {
-		return self.router, errors.New("application is not resolved")
+func (a *APIApp) Router() (*mux.Router, error) {
+	if a.isResolved {
+		return a.router, nil
 	}
+	return a.router, errors.New("application is not resolved")
 }
 
 // Take one app and add its routes to the current app. Errors if the
 // current app is resolved. If the apps have different default
 // versions set, the versions on the second app are explicitly set.
-func (self *ApiApp) AddApp(app *ApiApp) error {
+func (a *APIApp) AddApp(app *APIApp) error {
 	// if we've already resolved then it has to be an error
-	if self.isResolved {
-		return errors.New("cannot merge an app into a resolved app.")
+	if a.isResolved {
+		return errors.New("cannot merge an app into a resolved app")
 	}
 
 	// this is a weird case, so worth a warning, but not worth exiting
@@ -90,8 +89,8 @@ func (self *ApiApp) AddApp(app *ApiApp) error {
 			"Continuing cautiously.")
 	}
 	// this is incredibly straightforward, just add the added routes to our routes list.
-	if app.defaultVersion == self.defaultVersion {
-		self.routes = append(self.routes, app.routes...)
+	if app.defaultVersion == a.defaultVersion {
+		a.routes = append(a.routes, app.routes...)
 		return nil
 	}
 
@@ -103,7 +102,7 @@ func (self *ApiApp) AddApp(app *ApiApp) error {
 		if route.version == -1 {
 			route.Version(app.defaultVersion)
 		}
-		self.routes = append(self.routes, route)
+		a.routes = append(a.routes, route)
 	}
 
 	return nil
@@ -114,38 +113,38 @@ func (self *ApiApp) AddApp(app *ApiApp) error {
 // same target. When `false`, the trailing slash is meaningful. The
 // default value for Gimlet apps is `true`, and this method should be
 // replaced with something more reasonable in the future.
-func (self *ApiApp) SetStrictSlash(v bool) {
-	self.strictSlash = v
+func (a *APIApp) SetStrictSlash(v bool) {
+	a.strictSlash = v
 }
 
 // Adds a negroni handler as middleware to the end of the current list
 // of middleware handlers.
-func (self *ApiApp) AddMiddleware(m negroni.Handler) {
-	self.middleware = append(self.middleware, m)
+func (a *APIApp) AddMiddleware(m negroni.Handler) {
+	a.middleware = append(a.middleware, m)
 }
 
 // Removes *all* middleware handlers from the current application.
-func (self *ApiApp) ResetMiddleware() {
-	self.middleware = []negroni.Handler{}
+func (a *APIApp) ResetMiddleware() {
+	a.middleware = []negroni.Handler{}
 }
 
 // Run configured API service on the configured port. If you Registers
 // middlewear for gziped responses and graceful shutdown with a 10
 // second timeout.
-func (self *ApiApp) Run() error {
+func (a *APIApp) Run() error {
 	var err error
-	if self.isResolved == false {
-		err = self.Resolve()
+	if !a.isResolved {
+		err = a.Resolve()
 	}
 
 	n := negroni.New()
-	for _, m := range self.middleware {
+	for _, m := range a.middleware {
 		n.Use(m)
 	}
 
-	n.UseHandler(self.router)
+	n.UseHandler(a.router)
 
-	listenOn := strings.Join([]string{self.address, strconv.Itoa(self.port)}, ":")
+	listenOn := strings.Join([]string{a.address, strconv.Itoa(a.port)}, ":")
 	grip.Noticeln("starting app on:", listenOn)
 
 	graceful.Run(listenOn, 10*time.Second, n)
@@ -155,22 +154,22 @@ func (self *ApiApp) Run() error {
 // Allows user to configure a default port for the API
 // service. Defaults to 3000, and return errors will refuse to set the
 // port to something unreasonable.
-func (self *ApiApp) SetPort(port int) error {
+func (a *APIApp) SetPort(port int) error {
 	defaultPort := 3000
 
-	if port == self.port {
-		grip.Warningf("port is already set to %d", self.port)
+	if port == a.port {
+		grip.Warningf("port is already set to %d", a.port)
 	} else if port <= 0 {
-		self.port = defaultPort
+		a.port = defaultPort
 		return fmt.Errorf("%d is not a valid port numbaer, using %d", port, defaultPort)
 	} else if port > 65535 {
-		self.port = defaultPort
+		a.port = defaultPort
 		return fmt.Errorf("port %d is too large, using default port (%d)", port, defaultPort)
 	} else if port < 1024 {
-		self.port = defaultPort
+		a.port = defaultPort
 		return fmt.Errorf("port %d is too small, using default port (%d)", port, defaultPort)
 	} else {
-		self.port = port
+		a.port = port
 	}
 
 	return nil

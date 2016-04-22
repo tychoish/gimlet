@@ -12,7 +12,7 @@ import (
 
 // Represents each route in the application and includes the route and
 // associate internal metadata for the route.
-type ApiRoute struct {
+type APIRoute struct {
 	route   string
 	methods []httpMethod
 	handler http.HandlerFunc
@@ -21,46 +21,42 @@ type ApiRoute struct {
 
 // Checks if a route has is valid. Current implementation only makes
 // sure that the version of the route is method.
-func (self *ApiRoute) IsValid() bool {
-	if self.version >= 0 {
-		return true
-	} else {
-		return false
-	}
+func (r *APIRoute) IsValid() bool {
+	return r.version >= 0
 }
 
 // Specify an integer for the version of this route.
-func (self *ApiRoute) Version(version int) *ApiRoute {
+func (r *APIRoute) Version(version int) *APIRoute {
 	if version < 0 {
 		grip.Warningf("%d is not a valid version", version)
 	} else {
-		self.version = version
+		r.version = version
 	}
-	return self
+	return r
 }
 
 // Primary method for creating and registering a new route with an
 // application. Use as the root of a method chain, passing this method
 // the path of the route.
-func (self *ApiApp) AddRoute(r string) *ApiRoute {
-	route := &ApiRoute{route: r, version: -1}
+func (a *APIApp) AddRoute(r string) *APIRoute {
+	route := &APIRoute{route: r, version: -1}
 
 	// data validation and cleanup
 	if !strings.HasPrefix(route.route, "/") {
 		route.route = "/" + route.route
 	}
 
-	self.routes = append(self.routes, route)
+	a.routes = append(a.routes, route)
 
 	return route
 }
 
 // Processes the data in an application and creats a mux.Router object.
-func (self *ApiApp) Resolve() error {
-	self.router = mux.NewRouter().StrictSlash(self.strictSlash)
+func (a *APIApp) Resolve() error {
+	a.router = mux.NewRouter().StrictSlash(a.strictSlash)
 
 	var hasErrs bool
-	for _, route := range self.routes {
+	for _, route := range a.routes {
 		if !route.IsValid() {
 			hasErrs = true
 			grip.Errorf("%d is an invalid api version. not adding route for %s",
@@ -75,24 +71,24 @@ func (self *ApiApp) Resolve() error {
 
 		if route.version > 0 {
 			versionedRoute := fmt.Sprintf("/v%d%s", route.version, route.route)
-			self.router.HandleFunc(versionedRoute, route.handler).Methods(methods...)
+			a.router.HandleFunc(versionedRoute, route.handler).Methods(methods...)
 			grip.Debugln("added route for:", versionedRoute)
 		}
 
-		if route.version == self.defaultVersion || route.version == 0 {
-			self.router.HandleFunc(route.route, route.handler).Methods(methods...)
+		if route.version == a.defaultVersion || route.version == 0 {
+			a.router.HandleFunc(route.route, route.handler).Methods(methods...)
 			grip.Debugln("added route for:", route.route)
 
 		}
 	}
 
-	self.isResolved = true
+	a.isResolved = true
 
-	if !hasErrs {
-		return nil
-	} else {
+	if hasErrs {
 		return errors.New("encountered errors resolving routes")
 	}
+
+	return nil
 }
 
 // Processes an http.Request and returns a map of strings to decoded

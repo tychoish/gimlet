@@ -7,43 +7,42 @@ import (
 	"github.com/tychoish/grip"
 )
 
-// JsonMessage is an implementation of the grip/message.Composer
+// JSONMessage is an implementation of the grip/message.Composer
 // interface, used so that we can log all incoming and outgoing Json
 // content in debug mode, without needing to serialize structs under
 // normal operation. Also contains a MarshalPretty() method which is
 // used in rendering JSON into the response objects.
-type JsonMessage struct {
+type JSONMessage struct {
 	data interface{}
 }
 
-func (self *JsonMessage) Resolve() string {
-	out, err := json.Marshal(self.data)
+func (m *JSONMessage) Resolve() string {
+	out, err := json.Marshal(m.data)
 	if err != nil {
 		grip.CatchWarning(err)
 		return ""
-	} else {
-		return string(out)
 	}
+	return string(out)
 }
 
 // In this implementation this is always true, but potentially, the
-// message can force itself to be *not* logable. May be useful in the
+// message can force itm to be *not* logable. May be useful in the
 // future to modify this form to suppress sensitive data.
-func (self *JsonMessage) Loggable() bool {
+func (m *JSONMessage) Loggable() bool {
 	return true
 }
 
 // Return the data without seralizing it first. Useful for logging
 // mechanisms that handle a raw format for insertion into a database
 // or posting to a service.
-func (self *JsonMessage) Raw() interface{} {
-	return self.data
+func (m *JSONMessage) Raw() interface{} {
+	return m.data
 }
 
 // A helper method to simplify calls to json.MarshalIndent(). This is
 // not part of the Composer interface.
-func (self *JsonMessage) MarshalPretty() ([]byte, error) {
-	return json.MarshalIndent(self.data, "", "  ")
+func (m *JSONMessage) MarshalPretty() ([]byte, error) {
+	return json.MarshalIndent(m.data, "", "  ")
 }
 
 // Register an http.HandlerFunc with a route. Chainable. The common
@@ -52,17 +51,17 @@ func (self *JsonMessage) MarshalPretty() ([]byte, error) {
 // can pass application state or other data into to the handlers when
 // the applications start, without relying on either global state *or*
 // running into complex typing issues.
-func (self *ApiRoute) Handler(h http.HandlerFunc) *ApiRoute {
-	self.handler = h
+func (m *APIRoute) Handler(h http.HandlerFunc) *APIRoute {
+	m.handler = h
 
-	return self
+	return m
 }
 
 // Writes a JSON document to the body of an HTTP request, setting the
 // return status of to 500 if the JSON seralization process encounters
 // an error, otherwise return
 func WriteJSONResponse(w http.ResponseWriter, code int, data interface{}) {
-	j := &JsonMessage{data: data}
+	j := &JSONMessage{data: data}
 
 	out, err := j.MarshalPretty()
 
@@ -106,7 +105,7 @@ func GetJSON(r *http.Request, data interface{}) error {
 
 	err := d.Decode(data)
 	grip.CatchDebug(err)
-	grip.ComposeDebug(&JsonMessage{data: data})
+	grip.ComposeDebug(&JSONMessage{data: data})
 
 	return err
 }

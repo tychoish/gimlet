@@ -14,35 +14,35 @@ const (
 
 // Chainable method to add a handler for the GET method to the
 // current route. Routes may specify multiple methods.
-func (self *ApiRoute) Get() *ApiRoute {
-	self.methods = append(self.methods, GET)
-	return self
+func (r *APIRoute) Get() *APIRoute {
+	r.methods = append(r.methods, GET)
+	return r
 }
 
 // Chainable method to add a handler for the PUT method to the
 // current route. Routes may specify multiple methods.
-func (self *ApiRoute) Put() *ApiRoute {
-	self.methods = append(self.methods, PUT)
-	return self
+func (r *APIRoute) Put() *APIRoute {
+	r.methods = append(r.methods, PUT)
+	return r
 }
 
 // Chainable method to add a handler for the POST method to the
 // current route. Routes may specify multiple methods.
-func (self *ApiRoute) Post() *ApiRoute {
-	self.methods = append(self.methods, POST)
-	return self
+func (r *APIRoute) Post() *APIRoute {
+	r.methods = append(r.methods, POST)
+	return r
 }
 
 // Chainable method to add a handler for the DELETE method to the
 // current route. Routes may specify multiple methods.
-func (self *ApiRoute) Delete() *ApiRoute {
-	self.methods = append(self.methods, DELETE)
-	return self
+func (r *APIRoute) Delete() *APIRoute {
+	r.methods = append(r.methods, DELETE)
+	return r
 }
 
 // Chainable method to add a handler for the PATCH method to the
 // current route. Routes may specify multiple methods.
-func (self *ApiRoute) Patch() *ApiRoute {
-	self.methods = append(self.methods, PATCH)
-	return self
+func (r *APIRoute) Patch() *APIRoute {
+	r.methods = append(r.methods, PATCH)
+	return r
 }
