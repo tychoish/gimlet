@@ -14,9 +14,9 @@ build:deps
 	go build -v
 
 lint:
-	# gofmt -l ./...
-	# go vet ./...
-	gometalinter ./...
+	gofmt -l ./.
+	go vet ./.
+	-gometalinter
 
 test:build lint
-	go test -cover -v -check.v ./...
+	go test -cover -v -check.v
