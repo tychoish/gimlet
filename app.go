@@ -36,10 +36,11 @@ type APIApp struct {
 	middleware     []negroni.Handler
 }
 
-// Returns a pointer to an application instance. These instances have
-// reasonable defaults and include middleware to: recover from panics
-// in handlers, log information about the request, and gzip compress
-// all data. Users must specify a default version for new methods.
+// NewApp returns a pointer to an application instance. These
+// instances have reasonable defaults and include middleware to:
+// recover from panics in handlers, log information about the request,
+// and gzip compress all data. Users must specify a default version
+// for new methods.
 func NewApp() *APIApp {
 	a := &APIApp{
 		defaultVersion: -1, // this is the same as having no version prepended to the path.
@@ -54,8 +55,8 @@ func NewApp() *APIApp {
 	return a
 }
 
-// Specifies a default version for the application. Default versions
-// must be 0 (no version,) or larger.
+// SetDefaultVersion allows you to specify a default version for the
+// application. Default versions must be 0 (no version,) or larger.
 func (a *APIApp) SetDefaultVersion(version int) {
 	if version < 0 {
 		grip.Warningf("%d is not a valid version", version)
@@ -65,8 +66,8 @@ func (a *APIApp) SetDefaultVersion(version int) {
 	}
 }
 
-// Returns the router object. If the application isn't resloved, then
-// the error return value is non-nil.
+// Router is the getter for an APIApp's router object. If the
+// application isn't resloved, then the error return value is non-nil.
 func (a *APIApp) Router() (*mux.Router, error) {
 	if a.isResolved {
 		return a.router, nil
@@ -74,8 +75,9 @@ func (a *APIApp) Router() (*mux.Router, error) {
 	return a.router, errors.New("application is not resolved")
 }
 
-// Take one app and add its routes to the current app. Errors if the
-// current app is resolved. If the apps have different default
+// AddApp allows you to combine App instances, by taking one app and
+// add its routes to the current app. Returns a non-nill error value
+// if the current app is resolved. If the apps have different default
 // versions set, the versions on the second app are explicitly set.
 func (a *APIApp) AddApp(app *APIApp) error {
 	// if we've already resolved then it has to be an error
@@ -108,22 +110,24 @@ func (a *APIApp) AddApp(app *APIApp) error {
 	return nil
 }
 
-// Sets the trailing slash behavior to pass to the `mux` layer. When
-// `true`, routes with and without trailing slashes resolve to the
-// same target. When `false`, the trailing slash is meaningful. The
-// default value for Gimlet apps is `true`, and this method should be
-// replaced with something more reasonable in the future.
+// SetStrictSlash defines the trailing slash behavior to pass to the
+// `mux` layer. When `true`, routes with and without trailing slashes
+// resolve to the same target. When `false`, the trailing slash is
+// meaningful. The default value for Gimlet apps is `true`, and this
+// method should be replaced with something more reasonable in the
+// future.
 func (a *APIApp) SetStrictSlash(v bool) {
 	a.strictSlash = v
 }
 
-// Adds a negroni handler as middleware to the end of the current list
-// of middleware handlers.
+// AddMiddleware adds a negroni handler as middleware to the end of
+// the current list of middleware handlers.
 func (a *APIApp) AddMiddleware(m negroni.Handler) {
 	a.middleware = append(a.middleware, m)
 }
 
-// Removes *all* middleware handlers from the current application.
+// ResetMiddleware removes *all* middleware handlers from the current
+// application.
 func (a *APIApp) ResetMiddleware() {
 	a.middleware = []negroni.Handler{}
 }
@@ -151,7 +155,7 @@ func (a *APIApp) Run() error {
 	return err
 }
 
-// Allows user to configure a default port for the API
+// SetPort allows users to configure a default port for the API
 // service. Defaults to 3000, and return errors will refuse to set the
 // port to something unreasonable.
 func (a *APIApp) SetPort(port int) error {

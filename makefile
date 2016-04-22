@@ -14,9 +14,7 @@ build:deps
 	go build -v
 
 lint:
-	gofmt -l ./.
-	go vet ./.
-	-gometalinter --disable=gotype
+	gometalinter --disable=gotype
 
 test:build lint
 	go test -cover -v -check.v

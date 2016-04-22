@@ -12,36 +12,36 @@ const (
 	PATCH
 )
 
-// Chainable method to add a handler for the GET method to the
-// current route. Routes may specify multiple methods.
+// Get is a chainable method to add a handler for the GET method to
+// the current route. Routes may specify multiple methods.
 func (r *APIRoute) Get() *APIRoute {
 	r.methods = append(r.methods, GET)
 	return r
 }
 
-// Chainable method to add a handler for the PUT method to the
-// current route. Routes may specify multiple methods.
+// Put is a chainable method to add a handler for the PUT method to
+// the current route. Routes may specify multiple methods.
 func (r *APIRoute) Put() *APIRoute {
 	r.methods = append(r.methods, PUT)
 	return r
 }
 
-// Chainable method to add a handler for the POST method to the
-// current route. Routes may specify multiple methods.
+// Post is a chainable method to add a handler for the POST method to
+// the current route. Routes may specify multiple methods.
 func (r *APIRoute) Post() *APIRoute {
 	r.methods = append(r.methods, POST)
 	return r
 }
 
-// Chainable method to add a handler for the DELETE method to the
-// current route. Routes may specify multiple methods.
+// Delete is a chainable method to add a handler for the DELETE method
+// to the current route. Routes may specify multiple methods.
 func (r *APIRoute) Delete() *APIRoute {
 	r.methods = append(r.methods, DELETE)
 	return r
 }
 
-// Chainable method to add a handler for the PATCH method to the
-// current route. Routes may specify multiple methods.
+// Patch is a chainable method to add a handler for the PATCH method
+// to the current route. Routes may specify multiple methods.
 func (r *APIRoute) Patch() *APIRoute {
 	r.methods = append(r.methods, PATCH)
 	return r

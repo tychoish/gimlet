@@ -27,43 +27,46 @@ func (m *JSONMessage) Resolve() string {
 	return string(out)
 }
 
-// In this implementation this is always true, but potentially, the
-// message can force itm to be *not* logable. May be useful in the
-// future to modify this form to suppress sensitive data.
+// Loggable is a method that allows allows the logging sender method
+// to avoid sending messages that don't have content or are otherwise
+// not worth sending, apart from the priority mechanism. In this
+// implementation this is always true. May be useful in the future to
+// modify this form to suppress sensitive data.
 func (m *JSONMessage) Loggable() bool {
 	return true
 }
 
-// Return the data without seralizing it first. Useful for logging
-// mechanisms that handle a raw format for insertion into a database
-// or posting to a service.
+// Raw returns the data without seralizing it first. Useful for
+// logging mechanisms that handle a raw format for insertion into a
+// database or posting to a service.
 func (m *JSONMessage) Raw() interface{} {
 	return m.data
 }
 
-// A helper method to simplify calls to json.MarshalIndent(). This is
-// not part of the Composer interface.
+// MarshalPretty is a helper method to simplify calls to
+// json.MarshalIndent(). This is not part of the Composer interface.
 func (m *JSONMessage) MarshalPretty() ([]byte, error) {
 	response, err := json.MarshalIndent(m.data, "", "  ")
 	response = append(response, []byte("\n")...)
 	return response, err
 }
 
-// Register an http.HandlerFunc with a route. Chainable. The common
-// pattern for implementing these functions is to write functions and
-// methods in your application that *return* handler fucntions, so you
-// can pass application state or other data into to the handlers when
-// the applications start, without relying on either global state *or*
-// running into complex typing issues.
+// Handler makes it possible to register an http.HandlerFunc with a
+// route. Chainable. The common pattern for implementing these
+// functions is to write functions and methods in your application
+// that *return* handler fucntions, so you can pass application state
+// or other data into to the handlers when the applications start,
+// without relying on either global state *or* running into complex
+// typing issues.
 func (m *APIRoute) Handler(h http.HandlerFunc) *APIRoute {
 	m.handler = h
 
 	return m
 }
 
-// Writes a JSON document to the body of an HTTP request, setting the
-// return status of to 500 if the JSON seralization process encounters
-// an error, otherwise return
+// WriteJSONResponse writes a JSON document to the body of an HTTP
+// request, setting the return status of to 500 if the JSON
+// seralization process encounters an error, otherwise return
 func WriteJSONResponse(w http.ResponseWriter, code int, data interface{}) {
 	j := &JSONMessage{data: data}
 
@@ -87,26 +90,29 @@ func WriteJSONResponse(w http.ResponseWriter, code int, data interface{}) {
 	}
 }
 
-// A helper method to write JSON data to the body of an HTTP request and return 200 (successful.)
+// WriteJSON is a helper method to write JSON data to the body of an
+// HTTP request and return 200 (successful.)
 func WriteJSON(w http.ResponseWriter, data interface{}) {
 	// 200
 	WriteJSONResponse(w, http.StatusOK, data)
 }
 
-// A helper method to write JSON data to the body of an HTTP request and return 400 (user error.)
+// WriteErrorJSON is a helper method to write JSON data to the body of
+// an HTTP request and return 400 (user error.)
 func WriteErrorJSON(w http.ResponseWriter, data interface{}) {
 	// 400
 	WriteJSONResponse(w, http.StatusBadRequest, data)
 }
 
-// A helper method to write JSON data to the body of an HTTP request and return 500 (internal error.)
+// WriteInternalErrorJSON is a helper method to write JSON data to the
+// body of an HTTP request and return 500 (internal error.)
 func WriteInternalErrorJSON(w http.ResponseWriter, data interface{}) {
 	// 500
 	WriteJSONResponse(w, http.StatusInternalServerError, data)
 }
 
-// Parses JSON from a request body into an object specified by the
-// request. Used in handler functiosn to retreve and parse data
+// GetJSON parses JSON from a request body into an object specified by
+// the request. Used in handler functiosn to retreve and parse data
 // submitted by the client.
 func GetJSON(r *http.Request, data interface{}) error {
 	d := json.NewDecoder(r.Body)

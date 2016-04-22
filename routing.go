@@ -10,8 +10,9 @@ import (
 	"github.com/tychoish/grip"
 )
 
-// Represents each route in the application and includes the route and
-// associate internal metadata for the route.
+// APIRoute is a object that represents each route in the application
+// and includes the route and associate internal metadata for the
+// route.
 type APIRoute struct {
 	route   string
 	methods []httpMethod
@@ -19,23 +20,7 @@ type APIRoute struct {
 	version int
 }
 
-// Checks if a route has is valid. Current implementation only makes
-// sure that the version of the route is method.
-func (r *APIRoute) IsValid() bool {
-	return r.version >= 0
-}
-
-// Specify an integer for the version of this route.
-func (r *APIRoute) Version(version int) *APIRoute {
-	if version < 0 {
-		grip.Warningf("%d is not a valid version", version)
-	} else {
-		r.version = version
-	}
-	return r
-}
-
-// Primary method for creating and registering a new route with an
+// AddRoute is the primary method for creating and registering a new route with an
 // application. Use as the root of a method chain, passing this method
 // the path of the route.
 func (a *APIApp) AddRoute(r string) *APIRoute {
@@ -51,7 +36,26 @@ func (a *APIApp) AddRoute(r string) *APIRoute {
 	return route
 }
 
-// Processes the data in an application and creats a mux.Router object.
+// IsValid checks if a route has is valid. Current implementation only
+// makes sure that the version of the route is method.
+func (r *APIRoute) IsValid() bool {
+	return r.version >= 0
+}
+
+// Version allows you to specify an integer for the version of this
+// route. Version is chainable.
+func (r *APIRoute) Version(version int) *APIRoute {
+	if version < 0 {
+		grip.Warningf("%d is not a valid version", version)
+	} else {
+		r.version = version
+	}
+	return r
+}
+
+// Resolve processes the data in an application instance, including
+// all routes and creats a mux.Router object for the application
+// instance.
 func (a *APIApp) Resolve() error {
 	a.router = mux.NewRouter().StrictSlash(a.strictSlash)
 
@@ -91,9 +95,10 @@ func (a *APIApp) Resolve() error {
 	return nil
 }
 
-// Processes an http.Request and returns a map of strings to decoded
-// strings for all arguments passed to the method in the URL. Use this
-// helper function when writing handler functions.
+// GetVars is a helper method that processes an http.Request and
+// returns a map of strings to decoded strings for all arguments
+// passed to the method in the URL. Use this helper function when
+// writing handler functions.
 func GetVars(r *http.Request) map[string]string {
 	return mux.Vars(r)
 }
