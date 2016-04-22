@@ -14,7 +14,7 @@ build:deps
 	go build -v
 
 lint:
-	gometalinter --disable=gotype
+	gometalinter --disable=gotype --deadline=20s
 
 test:build lint
 	go test -cover -v -check.v
