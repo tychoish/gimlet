@@ -24,6 +24,7 @@ type AppLogging struct {
 func NewAppLogger() *AppLogging {
 	l := &AppLogging{grip.NewJournaler("gimlet")}
 
+	// use the default sender for "grip"
 	l.SetSender(grip.Sender())
 
 	return l

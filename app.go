@@ -24,7 +24,7 @@ import (
 	"github.com/tylerb/graceful"
 )
 
-// A structure representing a single API service
+// A structure representing a single API service.
 type ApiApp struct {
 	routes         []*ApiRoute
 	defaultVersion int
@@ -65,6 +65,8 @@ func (self *ApiApp) SetDefaultVersion(version int) {
 	}
 }
 
+// Returns the router object. If the application isn't resloved, then
+// the error return value is non-nil.
 func (self *ApiApp) Router() (*mux.Router, error) {
 	if self.isResolved {
 		return self.router, nil
@@ -98,7 +100,7 @@ func (self *ApiApp) AddApp(app *ApiApp) error {
 	// case where you assemble v1 and v2 of an api in different
 	// places in your code and want to merge them in later.
 	for _, route := range app.routes {
-		if route.version == 0 {
+		if route.version == -1 {
 			route.Version(app.defaultVersion)
 		}
 		self.routes = append(self.routes, route)
@@ -158,7 +160,7 @@ func (self *ApiApp) SetPort(port int) error {
 
 	if port == self.port {
 		grip.Warningf("port is already set to %d", self.port)
-	} else if port <= 0 && self.port != defaultPort {
+	} else if port <= 0 {
 		self.port = defaultPort
 		return fmt.Errorf("%d is not a valid port numbaer, using %d", port, defaultPort)
 	} else if port > 65535 {
