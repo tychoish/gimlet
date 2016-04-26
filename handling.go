@@ -78,7 +78,7 @@ func WriteJSONResponse(w http.ResponseWriter, code int, data interface{}) {
 		return
 	}
 
-	grip.ComposeDebug(j)
+	grip.Debug(j)
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
@@ -119,7 +119,7 @@ func GetJSON(r *http.Request, data interface{}) error {
 
 	err := d.Decode(data)
 	grip.CatchDebug(err)
-	grip.ComposeDebug(&JSONMessage{data: data})
+	grip.Debug(&JSONMessage{data: data})
 
 	return err
 }
