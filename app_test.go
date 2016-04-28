@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/tychoish/grip"
 	"github.com/tychoish/grip/level"
-	. "gopkg.in/check.v1"
 )
 
 type GimletSuite struct {
@@ -127,7 +126,7 @@ func (s *GimletSuite) TestRouteMergingInWithDifferntVersions() {
 	// try adding to second app, to the first, with one route
 	s.Len(s.app.routes, 0)
 	err := s.app.AddApp(subApp)
-	s.Nil(err, IsNil)
+	s.NoError(err)
 	s.Len(s.app.routes, 1)
 	s.Equal(s.app.routes[0], route)
 
@@ -141,7 +140,7 @@ func (s *GimletSuite) TestRouteMergingInWithDifferntVersions() {
 
 	// make sure the default value of nextApp is on the route in the subApp
 	err = s.app.AddApp(nextApp)
-	s.NoError(err, IsNil)
+	s.NoError(err)
 	s.Equal(s.app.routes[1], nextRoute)
 
 	// this is the meaningful validation here.
