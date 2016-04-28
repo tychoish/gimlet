@@ -16,7 +16,7 @@ import (
 // middlewear resembles the basic tracking provided by Negroni's
 // standard logging system.
 type AppLogging struct {
-	*grip.Journaler
+	grip.Journaler
 }
 
 // NewAppLogger creates an logging middlear instance suitable for use
@@ -31,8 +31,8 @@ func NewAppLogger() *AppLogging {
 	return l
 }
 
-// Logs the request path, the beginning of every request as well as the duration upon
-// completion and the status of the response.
+// Logs the request path, the beginning of every request as well as
+// the duration upon completion and the status of the response.
 func (l *AppLogging) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	start := time.Now()
 	l.Infof("Started %s %s", r.Method, r.URL.Path)
