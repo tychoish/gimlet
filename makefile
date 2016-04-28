@@ -1,27 +1,60 @@
-projectPath := github.com/tychoish/gimlet
-coverageFile := coverage.out
+# project configuration
+name := gimlet
+buildDir := build
+packages :=
+projectPath := github.com/tychoish/$(name)
 
-deps:
-	go get github.com/codegangsta/negroni
-	go get github.com/gorilla/mux
-	go get github.com/phyber/negroni-gzip/gzip
-	go get github.com/tychoish/grip
-	go get github.com/tylerb/graceful
 
-test-deps:deps
-	go get github.com/stretchr/testify/suite
-	go get github.com/alecthomas/gometalinter
-	gometalinter --install
+# declaration of dependencies
+lintDeps := github.com/alecthomas/gometalinter
+testDeps := github.com/stretchr/testify
+deps += github.com/codegangsta/negroni
+deps += github.com/gorilla/mux
+deps += github.com/phyber/negroni-gzip/gzip
+deps += github.com/tychoish/grip
+deps += github.com/tylerb/graceful
 
+# implementation details for being able to lazily
+gopath := $(shell go env GOPATH)
+deps := $(addprefix $(gopath)/src/,${deps})
+lintDeps := $(addprefix $(gopath)/src/,${lintDeps})
+testDeps := $(addprefix $(gopath)/src/,${testDeps})
+$(gopath)/src/%:
+	go get $(subst $(gopath)/src/,,$@)
+# end dependency installation tools
+
+
+# userfacing targets for basic build/test/lint operations
+.PHONY:build test lint coverage-report
 build:deps
-	go build -v
-
+	@mkdir -p $@
+	go build
+test:test-deps
+	go test -v ./...
 lint:
-	gometalinter --disable=gotype --deadline=20s
+	$(gopath)/bin/gometalinter --deadline=20s --disable=gotype ./...
+coverage:$(foreach target,$(packages),$(buildDir)/coverage.$(target).out) $(buildDir)/coverage.out $(buildDir)
+coverage-report:$(foreach target,$(packages),coverage-report-$(target))
+# end front-ends
 
-test:
-	go test -v -covermode=count -coverprofile=${coverageFile} ${projectPath}
-	go tool cover -func=${coverageFile}
+# implementation for package coverage
+coverage-%:$(buildDir)/coverage.%.out
+$(buildDir)/coverage.out:test-deps #(buildDir)
+# this special target is only needed because there are tests in the root package.
+	go test -v -covermode=count -coverprofile=$@ $(projectPath)
+	[ -f $@ ] && go tool cover -func=$@ | sed 's%${projectPath}/%%' | column -t
+$(buildDir)/coverage.%.out:% test-deps
+	go test -v -covermode=count -coverprofile=$@ $(projectPath)/$<
+	[ -f $@ ] && go tool cover -func=$@ | sed 's%${projectPath}/%%' | column -t
+coverage-report-%:$(buildDir)/coverage.%.out
+	[ -f $< ] && go tool cover -html=$<
+# end coverage rports
 
-coverage-report:test
-	go tool cover -html=${coverageFile}
+
+# targets to install dependencies
+deps:$(deps)
+test-deps:$(testDeps)
+lint-deps:$(lintDeps)
+	gometalinter --install
+clean:
+	rm -rf $(deps) $(lintDeps) $(testDeps)
