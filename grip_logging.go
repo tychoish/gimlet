@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/codegangsta/negroni"
 	"github.com/tychoish/grip"
+	"github.com/urfave/negroni"
 )
 
 // AppLogging provides a Negroni-compatible middleware to send all

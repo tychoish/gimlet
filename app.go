@@ -17,11 +17,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	"github.com/phyber/negroni-gzip/gzip"
 	"github.com/tychoish/grip"
 	"github.com/tylerb/graceful"
+	"github.com/urfave/negroni"
 )
 
 // APIApp is a structure representing a single API service.
