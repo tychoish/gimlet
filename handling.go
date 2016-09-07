@@ -4,21 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/tychoish/grip"
 )
-
-// Handler makes it possible to register an http.HandlerFunc with a
-// route. Chainable. The common pattern for implementing these
-// functions is to write functions and methods in your application
-// that *return* handler fucntions, so you can pass application state
-// or other data into to the handlers when the applications start,
-// without relying on either global state *or* running into complex
-// typing issues.
-func (m *APIRoute) Handler(h http.HandlerFunc) *APIRoute {
-	m.handler = h
-
-	return m
-}
 
 // WriteJSONResponse writes a JSON document to the body of an HTTP
 // request, setting the return status of to 500 if the JSON
@@ -78,4 +66,12 @@ func GetJSON(r *http.Request, data interface{}) error {
 	grip.Debug(&JSONMessage{data: data})
 
 	return err
+}
+
+// GetVars is a helper method that processes an http.Request and
+// returns a map of strings to decoded strings for all arguments
+// passed to the method in the URL. Use this helper function when
+// writing handler functions.
+func GetVars(r *http.Request) map[string]string {
+	return mux.Vars(r)
 }

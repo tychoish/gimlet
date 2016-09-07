@@ -126,6 +126,48 @@ func (a *APIApp) AddMiddleware(m negroni.Handler) {
 	a.middleware = append(a.middleware, m)
 }
 
+// Resolve processes the data in an application instance, including
+// all routes and creats a mux.Router object for the application
+// instance.
+func (a *APIApp) Resolve() error {
+	a.router = mux.NewRouter().StrictSlash(a.strictSlash)
+
+	var hasErrs bool
+	for _, route := range a.routes {
+		if !route.IsValid() {
+			hasErrs = true
+			grip.Errorf("%d is an invalid api version. not adding route for %s",
+				route.version, route.route)
+			continue
+		}
+
+		var methods []string
+		for _, m := range route.methods {
+			methods = append(methods, strings.ToLower(m.String()))
+		}
+
+		if route.version > 0 {
+			versionedRoute := fmt.Sprintf("/v%d%s", route.version, route.route)
+			a.router.HandleFunc(versionedRoute, route.handler).Methods(methods...)
+			grip.Debugln("added route for:", versionedRoute)
+		}
+
+		if route.version == a.defaultVersion || route.version == 0 {
+			a.router.HandleFunc(route.route, route.handler).Methods(methods...)
+			grip.Debugln("added route for:", route.route)
+
+		}
+	}
+
+	a.isResolved = true
+
+	if hasErrs {
+		return errors.New("encountered errors resolving routes")
+	}
+
+	return nil
+}
+
 // ResetMiddleware removes *all* middleware handlers from the current
 // application.
 func (a *APIApp) ResetMiddleware() {

@@ -1,12 +1,9 @@
 package gimlet
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 
-	"github.com/gorilla/mux"
 	"github.com/tychoish/grip"
 )
 
@@ -53,52 +50,50 @@ func (r *APIRoute) Version(version int) *APIRoute {
 	return r
 }
 
-// Resolve processes the data in an application instance, including
-// all routes and creats a mux.Router object for the application
-// instance.
-func (a *APIApp) Resolve() error {
-	a.router = mux.NewRouter().StrictSlash(a.strictSlash)
+// Handler makes it possible to register an http.HandlerFunc with a
+// route. Chainable. The common pattern for implementing these
+// functions is to write functions and methods in your application
+// that *return* handler fucntions, so you can pass application state
+// or other data into to the handlers when the applications start,
+// without relying on either global state *or* running into complex
+// typing issues.
+func (m *APIRoute) Handler(h http.HandlerFunc) *APIRoute {
+	m.handler = h
 
-	var hasErrs bool
-	for _, route := range a.routes {
-		if !route.IsValid() {
-			hasErrs = true
-			grip.Errorf("%d is an invalid api version. not adding route for %s",
-				route.version, route.route)
-			continue
-		}
-
-		var methods []string
-		for _, m := range route.methods {
-			methods = append(methods, strings.ToLower(m.String()))
-		}
-
-		if route.version > 0 {
-			versionedRoute := fmt.Sprintf("/v%d%s", route.version, route.route)
-			a.router.HandleFunc(versionedRoute, route.handler).Methods(methods...)
-			grip.Debugln("added route for:", versionedRoute)
-		}
-
-		if route.version == a.defaultVersion || route.version == 0 {
-			a.router.HandleFunc(route.route, route.handler).Methods(methods...)
-			grip.Debugln("added route for:", route.route)
-
-		}
-	}
-
-	a.isResolved = true
-
-	if hasErrs {
-		return errors.New("encountered errors resolving routes")
-	}
-
-	return nil
+	return m
 }
 
-// GetVars is a helper method that processes an http.Request and
-// returns a map of strings to decoded strings for all arguments
-// passed to the method in the URL. Use this helper function when
-// writing handler functions.
-func GetVars(r *http.Request) map[string]string {
-	return mux.Vars(r)
+// Get is a chainable method to add a handler for the GET method to
+// the current route. Routes may specify multiple methods.
+func (r *APIRoute) Get() *APIRoute {
+	r.methods = append(r.methods, GET)
+	return r
+}
+
+// Put is a chainable method to add a handler for the PUT method to
+// the current route. Routes may specify multiple methods.
+func (r *APIRoute) Put() *APIRoute {
+	r.methods = append(r.methods, PUT)
+	return r
+}
+
+// Post is a chainable method to add a handler for the POST method to
+// the current route. Routes may specify multiple methods.
+func (r *APIRoute) Post() *APIRoute {
+	r.methods = append(r.methods, POST)
+	return r
+}
+
+// Delete is a chainable method to add a handler for the DELETE method
+// to the current route. Routes may specify multiple methods.
+func (r *APIRoute) Delete() *APIRoute {
+	r.methods = append(r.methods, DELETE)
+	return r
+}
+
+// Patch is a chainable method to add a handler for the PATCH method
+// to the current route. Routes may specify multiple methods.
+func (r *APIRoute) Patch() *APIRoute {
+	r.methods = append(r.methods, PATCH)
+	return r
 }
