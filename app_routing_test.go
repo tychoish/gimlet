@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mongodb/grip"
+	"github.com/deciduosity/grip"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )

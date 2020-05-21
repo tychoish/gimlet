@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/evergreen-ci/gimlet"
+	"github.com/deciduosity/gimlet"
 )
 
 type updateRoleHandler struct {

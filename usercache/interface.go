@@ -1,7 +1,7 @@
 package usercache
 
 import (
-	"github.com/evergreen-ci/gimlet"
+	"github.com/deciduosity/gimlet"
 )
 
 // PutUserGetToken returns a new token. Updating the user's TTL should happen in

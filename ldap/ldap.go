@@ -9,10 +9,10 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/evergreen-ci/gimlet"
-	"github.com/evergreen-ci/gimlet/usercache"
-	"github.com/mongodb/grip"
-	"github.com/mongodb/grip/message"
+	"github.com/deciduosity/gimlet"
+	"github.com/deciduosity/gimlet/usercache"
+	"github.com/deciduosity/grip"
+	"github.com/deciduosity/grip/message"
 	"github.com/pkg/errors"
 	ldap "gopkg.in/ldap.v3"
 )

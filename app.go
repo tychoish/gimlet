@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/mongodb/grip"
+	"github.com/deciduosity/grip"
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
 )

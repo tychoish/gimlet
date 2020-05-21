@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/mongodb/grip"
+	"github.com/deciduosity/grip"
 	yaml "gopkg.in/yaml.v2"
 )
 

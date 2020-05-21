@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/mongodb/grip"
+	"github.com/deciduosity/grip"
 )
 
 // ResponsePages holds pagination metadata for a route built with the

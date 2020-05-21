@@ -9,8 +9,8 @@ import (
 	"sync"
 	"text/template"
 
-	"github.com/mongodb/grip"
-	"github.com/mongodb/grip/message"
+	"github.com/deciduosity/grip"
+	"github.com/deciduosity/grip/message"
 )
 
 type textRenderer struct {

@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/evergreen-ci/gimlet"
-	"github.com/mongodb/grip"
+	"github.com/deciduosity/gimlet"
+	"github.com/deciduosity/grip"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"

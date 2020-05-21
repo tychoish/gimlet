@@ -5,9 +5,9 @@ package gimlet
 import (
 	"net/http/httputil"
 
-	"github.com/mongodb/grip"
-	"github.com/mongodb/grip/level"
-	"github.com/mongodb/grip/message"
+	"github.com/deciduosity/grip"
+	"github.com/deciduosity/grip/level"
+	"github.com/deciduosity/grip/message"
 )
 
 // Proxy adds a simple reverse proxy handler to the specified route,

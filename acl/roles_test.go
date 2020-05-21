@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/evergreen-ci/gimlet"
-	"github.com/evergreen-ci/gimlet/rolemanager"
+	"github.com/deciduosity/gimlet"
+	"github.com/deciduosity/gimlet/rolemanager"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -1,8 +1,8 @@
 package usercache
 
 import (
-	"github.com/evergreen-ci/gimlet"
-	"github.com/mongodb/grip"
+	"github.com/deciduosity/gimlet"
+	"github.com/deciduosity/grip"
 	"github.com/pkg/errors"
 )
 

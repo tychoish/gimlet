@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/mongodb/grip"
+	"github.com/deciduosity/grip"
 	"github.com/urfave/negroni"
 )
 

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/evergreen-ci/gimlet"
-	"github.com/evergreen-ci/gimlet/util"
+	"github.com/deciduosity/gimlet"
+	"github.com/deciduosity/gimlet/util"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

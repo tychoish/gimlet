@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/mongodb/grip"
-	"github.com/mongodb/grip/message"
+	"github.com/deciduosity/grip"
+	"github.com/deciduosity/grip/message"
 )
 
 // NewAuthenticationHandler produces middleware that attaches

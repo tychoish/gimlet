@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/evergreen-ci/gimlet"
-	"github.com/evergreen-ci/gimlet/util"
+	"github.com/deciduosity/gimlet"
+	"github.com/deciduosity/gimlet/util"
 	"github.com/pkg/errors"
 )
 

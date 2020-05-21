@@ -8,8 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/mongodb/grip"
-	"github.com/mongodb/grip/send"
+	"github.com/deciduosity/grip"
+	"github.com/deciduosity/grip/send"
 	"github.com/stretchr/testify/assert"
 )
 

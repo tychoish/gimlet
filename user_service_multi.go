@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/mongodb/grip"
+	"github.com/deciduosity/grip"
 	"github.com/pkg/errors"
 )
 
