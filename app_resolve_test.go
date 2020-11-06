@@ -91,7 +91,7 @@ func TestRouteResolutionHelpers(t *testing.T) {
 		assert.Equal(t, fmt.Sprint(hndlr), fmt.Sprint(h))
 
 		// if there's global middleware, we're different
-		h = tc.route.getHandlerWithMiddlware([]Middleware{logger})
+		h = tc.route.getHandlerWithMiddlware([]interface{}{logger})
 		assert.NotEqual(t, fmt.Sprint(hndlr), fmt.Sprint(h))
 
 		// if you add wrapper middleware we're different differently

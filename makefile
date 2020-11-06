@@ -2,7 +2,7 @@
 name := gimlet
 buildDir := build
 packages := $(name) acl ldap okta rolemanager
-orgPath := github.com/evergreen-ci
+orgPath := github.com/deciduosity
 projectPath := $(orgPath)/$(name)
 # end project configuration
 

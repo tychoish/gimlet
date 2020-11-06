@@ -16,7 +16,7 @@ type APIRoute struct {
 	prefix            string
 	methods           []httpMethod
 	handler           http.HandlerFunc
-	wrappers          []Middleware
+	wrappers          []interface{}
 	version           int
 	overrideAppPrefix bool
 	isPrefix          bool
@@ -48,7 +48,7 @@ func (a *APIApp) AddRoute(r string) *APIRoute {
 
 	// data validation and cleanup
 	if !strings.HasPrefix(route.route, "/") {
-		route.route = "/" + route.route
+		route.route = fmt.Sprint("/", route.route)
 	}
 
 	a.routes = append(a.routes, route)
@@ -114,13 +114,44 @@ func (r *APIRoute) IsValid() bool {
 }
 
 // ClearWrappers resets the routes middlware wrappers.
-func (r *APIRoute) ClearWrappers() { r.wrappers = []Middleware{} }
+func (r *APIRoute) ClearWrappers() { r.wrappers = []interface{}{} }
 
 // Wrap adds a middleware that is applied specifically to this
 // route. Route-specific middlware is applied after application specific
 // middleware (when there's a route or application prefix) and before
 // global application middleware (when merging applications without prefixes.)
-func (r *APIRoute) Wrap(m ...Middleware) *APIRoute { r.wrappers = append(r.wrappers, m...); return r }
+func (r *APIRoute) Wrap(mws ...Middleware) *APIRoute {
+	for _, m := range mws {
+		r.wrappers = append(r.wrappers, m)
+	}
+	return r
+}
+
+// WrapHandlerFunc adds a middleware that is applied specifically to this route.
+// Route-specific middlware is applied after application specific
+// middleware (when there's a route or application prefix) and before
+// global application middleware (when merging applications without
+// prefixes.)
+func (r *APIRoute) WrapHandlerFunc(mws ...HandlerFuncWrapper) *APIRoute {
+	for _, m := range mws {
+		r.wrappers = append(r.wrappers, m)
+	}
+
+	return r
+}
+
+// Wrap adds a middleware that is applied specifically to this route.
+// Route-specific middlware is applied after application specific
+// middleware (when there's a route or application prefix) and before
+// global application middleware (when merging applications without
+// prefixes.)
+func (r *APIRoute) WrapHandler(mws ...HandlerWrapper) *APIRoute {
+	for _, m := range mws {
+		r.wrappers = append(r.wrappers, m)
+	}
+
+	return r
+}
 
 // Prefix allows per-route prefixes, which will override the application's global prefix if set.
 func (r *APIRoute) Prefix(p string) *APIRoute {

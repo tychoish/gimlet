@@ -15,16 +15,31 @@ import (
 // AppSuite contains tests of the APIApp system. Tests of the route
 // methods are ostly handled in other suites.
 type AppSuite struct {
-	app *APIApp
+	constructor func() *APIApp
+	app         *APIApp
 	suite.Suite
 }
 
-func TestAppSuite(t *testing.T) {
-	suite.Run(t, new(AppSuite))
+func TestChiAppSuite(t *testing.T) {
+	s := &AppSuite{}
+	s.constructor = func() *APIApp { return NewApp().SetRouter(RouterImplChi) }
+	suite.Run(t, s)
+}
+
+func TestGorilaAppSuite(t *testing.T) {
+	s := &AppSuite{}
+	s.constructor = func() *APIApp { return NewApp().SetRouter(RouterImplGorilla) }
+	suite.Run(t, s)
+}
+
+func TestDefaultAppSuite(t *testing.T) {
+	s := &AppSuite{}
+	s.constructor = NewApp
+	suite.Run(t, s)
 }
 
 func (s *AppSuite) SetupTest() {
-	s.app = NewApp()
+	s.app = s.constructor()
 	s.app.AddMiddleware(MakeRecoveryLogger())
 	err := grip.GetSender().SetLevel(send.LevelInfo{Default: level.Debug, Threshold: level.Info})
 	s.NoError(err)
@@ -70,19 +85,48 @@ func (s *AppSuite) TestPortSetterDoesNotAllowImpermisableValues() {
 	}
 }
 
+func (s *AppSuite) TestAlternateMiddlewares() {
+	s.Len(s.app.middleware, 1)
+	s.app.AddMiddlewareHandler(MiddlewareFunc(NewAppLogger()))
+	s.app.AddMiddlewareFunc(func(next http.HandlerFunc) http.HandlerFunc { return next })
+	s.Len(s.app.middleware, 3)
+
+	err := s.app.Resolve()
+	s.NoError(err)
+}
+
 func (s *AppSuite) TestRouterReturnsRouterInstanceWhenResolved() {
 	s.False(s.app.isResolved)
-	r, err := s.app.Router()
-	s.Nil(r)
-	s.Error(err)
+
+	switch s.app.routerImpl {
+	case RouterImplChi:
+		r, err := s.app.Mux()
+		s.Nil(r)
+		s.Error(err)
+	case RouterImplGorilla:
+		r, err := s.app.Router()
+		s.Nil(r)
+		s.Error(err)
+	default:
+		s.T().Fatal("unsupported router")
+	}
 
 	s.app.AddRoute("/foo").Version(1).Get().Handler(func(_ http.ResponseWriter, _ *http.Request) {})
 	s.NoError(s.app.Resolve())
 	s.True(s.app.isResolved)
 
-	r, err = s.app.Router()
-	s.NotNil(r)
-	s.NoError(err)
+	switch s.app.routerImpl {
+	case RouterImplChi:
+		r, err := s.app.Mux()
+		s.NotNil(r)
+		s.NoError(err)
+	case RouterImplGorilla:
+		r, err := s.app.Router()
+		s.NotNil(r)
+		s.NoError(err)
+	default:
+		s.T().Fatal("unsupported router")
+	}
 }
 
 func (s *AppSuite) TestResolveEncountersErrorsWithAnInvalidRoot() {
@@ -96,11 +140,10 @@ func (s *AppSuite) TestResolveEncountersErrorsWithAnInvalidRoot() {
 	n, err2 := s.app.getNegroni()
 	s.Nil(n)
 	s.Error(err2)
-	s.Equal(err1.Error(), err2.Error())
 
 	// also to run
 	err2 = s.app.Run(context.TODO())
-	s.Equal(err1.Error(), err2.Error())
+	s.Error(err2)
 }
 
 func (s *AppSuite) TestSetPortToExistingValueIsANoOp() {
@@ -214,7 +257,46 @@ func (s *AppSuite) TestAppRunWithError() {
 func (s *AppSuite) TestWrapperAccessors() {
 	s.Len(s.app.wrappers, 0)
 	s.app.AddWrapper(MakeRecoveryLogger())
-	s.Len(s.app.wrappers, 1)
+	s.app.AddWrapperHandler(MiddlewareFunc(MakeRecoveryLogger()))
+	s.app.AddWrapperFunc(func(next http.HandlerFunc) http.HandlerFunc { return next })
+
+	s.Len(s.app.wrappers, 3)
 	s.app.RestWrappers()
 	s.Len(s.app.wrappers, 0)
+}
+
+func (s *AppSuite) TestResolveWithInvalidMiddleware() {
+	s.app.middleware = append(s.app.middleware, 1, true, "wat")
+	s.Error(s.app.Resolve())
+}
+
+func (s *AppSuite) TestResolveWithInvalidWrappers() {
+	s.app.wrappers = append(s.app.wrappers, 1, true, "wat")
+	s.Error(s.app.Resolve())
+
+}
+
+func (s *AppSuite) TestResolveWithInvalidRouteWrappers() {
+	r := s.app.AddRoute("/what").Version(1).Get().Handler(func(_ http.ResponseWriter, _ *http.Request) {})
+	r.wrappers = append(r.wrappers, 1, true, "wat")
+	s.Error(s.app.Resolve())
+}
+
+func (s *AppSuite) TestResolveWithRouteWrappers() {
+	s.app.AddRoute("/what").Version(1).Get().Handler(func(_ http.ResponseWriter, _ *http.Request) {}).
+		Wrap(MakeRecoveryLogger()).
+		WrapHandler(func(next http.Handler) http.Handler { return next }).
+		WrapHandler(MiddlewareFunc(MakeRecoveryLogger())).
+		WrapHandlerFunc(func(next http.HandlerFunc) http.HandlerFunc { return next })
+	s.NoError(s.app.Resolve())
+}
+
+func (s *AppSuite) TestResolveAndHandlerWithInvalidRoutes() {
+	s.app = &APIApp{}
+	s.Error(s.app.routerImpl.Validate())
+
+	s.Error(s.app.Resolve())
+	h, err := s.app.Handler()
+	s.Nil(h)
+	s.Error(err)
 }

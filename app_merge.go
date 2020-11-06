@@ -3,8 +3,9 @@ package gimlet
 import (
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"github.com/deciduosity/grip"
+	"github.com/go-chi/chi"
+	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/urfave/negroni"
 )
@@ -14,9 +15,9 @@ import (
 //
 // Eventually the router will become an implementation detail of
 // this/related functions.
-func AssembleHandler(router *mux.Router, apps ...*APIApp) (http.Handler, error) {
+func AssembleHandlerGorilla(router *mux.Router, apps ...*APIApp) (http.Handler, error) {
 	catcher := grip.NewBasicCatcher()
-	mws := []Middleware{}
+	mws := []interface{}{}
 
 	seenPrefixes := make(map[string]struct{})
 
@@ -27,18 +28,11 @@ func AssembleHandler(router *mux.Router, apps ...*APIApp) (http.Handler, error) 
 			}
 			seenPrefixes[app.prefix] = struct{}{}
 
-			n := negroni.New()
-			for _, m := range app.middleware {
-				n.Use(m)
-			}
-
 			r := router.PathPrefix(app.prefix).Subrouter()
 			catcher.Add(app.attachRoutes(r, false)) // this adds wrapper middlware
-			n.UseHandler(r)
-			router.PathPrefix(app.prefix).Handler(n)
+			router.PathPrefix(app.prefix).Handler(buildNegroni(r, app.middleware...))
 		} else {
 			mws = append(mws, app.middleware...)
-
 			catcher.Add(app.attachRoutes(router, true))
 		}
 	}
@@ -47,13 +41,80 @@ func AssembleHandler(router *mux.Router, apps ...*APIApp) (http.Handler, error) 
 		return nil, catcher.Resolve()
 	}
 
-	n := negroni.New()
-	for _, m := range mws {
-		n.Use(m)
-	}
-	n.UseHandler(router)
+	return buildNegroni(router, mws), nil
+}
 
-	return n, nil
+func AssembleHandlerChi(router *chi.Mux, apps ...*APIApp) (out http.Handler, err error) {
+	out = router
+	catcher := grip.NewBasicCatcher()
+	mws := []interface{}{}
+
+	seenPrefixes := make(map[string]struct{})
+
+	defer func() {
+		if p := recover(); p != nil {
+			catcher.Errorf("chi.Mux encountered error: %+v", p)
+		}
+		err = catcher.Resolve()
+		if catcher.HasErrors() {
+			out = nil
+		}
+	}()
+
+	router.Use(convertMidlewares(mws...)...)
+
+	for _, app := range apps {
+		if app.prefix != "" {
+			if _, ok := seenPrefixes[app.prefix]; ok {
+				catcher.Add(errors.Errorf("route prefix '%s' defined more than once", app.prefix))
+			}
+			seenPrefixes[app.prefix] = struct{}{}
+
+			router.With(convertMidlewares(app.middleware...)...).Route(app.prefix, func(r chi.Router) {
+				catcher.Add(app.attachRoutes(r, false)) // this adds wrapper middlware
+			})
+		} else {
+			mws = append(mws, app.middleware...)
+			catcher.Add(app.attachRoutes(router, true))
+		}
+	}
+
+	return
+}
+
+func convertMidlewares(mws ...interface{}) []func(http.Handler) http.Handler {
+	out := make([]func(http.Handler) http.Handler, 0, len(mws))
+
+	for _, mw := range mws {
+		switch m := mw.(type) {
+		case HandlerWrapper:
+			out = append(out, m)
+		case HandlerFuncWrapper:
+			out = append(out, MiddlewareFunc(m))
+		case Middleware:
+			out = append(out, MiddlewareFunc((m)))
+		}
+	}
+
+	return out
+}
+
+func buildNegroni(router *mux.Router, mws ...interface{}) *negroni.Negroni {
+	n := negroni.New()
+
+	for _, m := range mws {
+		switch mw := m.(type) {
+		case HandlerWrapper:
+			n.Use(mw)
+		case HandlerFuncWrapper:
+			n.Use(WrapperMiddleware(mw))
+		case Middleware:
+			n.Use(mw)
+		}
+	}
+
+	n.UseHandler(router)
+	return n
 }
 
 // MergeApplications takes a number of gimlet applications and
@@ -63,7 +124,26 @@ func MergeApplications(apps ...*APIApp) (http.Handler, error) {
 		return nil, errors.New("must specify at least one application")
 	}
 
-	return AssembleHandler(mux.NewRouter(), apps...)
+	var impl RouterImplementation
+	for idx, app := range apps {
+		if idx == 0 || impl == RouterImplUndefined {
+			impl = app.routerImpl
+			continue
+		}
+		if impl != app.routerImpl {
+			return nil, errors.Errorf("cannot merge applications: app #%d uses %s, and all apps must use %s",
+				idx, app.routerImpl, impl)
+		}
+	}
+
+	switch impl {
+	case RouterImplChi:
+		return AssembleHandlerChi(chi.NewMux(), apps...)
+	case RouterImplGorilla:
+		return AssembleHandlerGorilla(mux.NewRouter(), apps...)
+	default:
+		return nil, errors.New("undefined router implementation")
+	}
 }
 
 // Merge takes multiple application instances and merges all of their

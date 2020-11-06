@@ -49,3 +49,13 @@ func MergeMiddleware(mws ...Middleware) Middleware {
 
 	return negroni.Wrap(n)
 }
+
+// MiddlewareFunc converts a gimlet Middleware to a HandlerWrapper for
+// use by routing systems that use these functions
+func MiddlewareFunc(m Middleware) HandlerWrapper {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			m.ServeHTTP(rw, r, next.ServeHTTP)
+		})
+	}
+}

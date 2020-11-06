@@ -32,8 +32,6 @@ func TestMergeMiddleware(t *testing.T) {
 }
 
 func TestMiddlewareFuncWrapper(t *testing.T) {
-	assert := assert.New(t)
-
 	legacyCalls := 0
 	legacyFunc := func(h http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
@@ -49,18 +47,16 @@ func TestMiddlewareFuncWrapper(t *testing.T) {
 	}
 
 	wrapped := WrapperMiddleware(legacyFunc)
-	assert.Implements((*Middleware)(nil), wrapped)
-	assert.Equal(0, legacyCalls)
-	assert.Equal(0, nextCalls)
+	assert.Implements(t, (*Middleware)(nil), wrapped)
+	assert.Equal(t, 0, legacyCalls)
+	assert.Equal(t, 0, nextCalls)
 
 	wrapped.ServeHTTP(nil, nil, next)
-	assert.Equal(1, legacyCalls)
-	assert.Equal(1, nextCalls)
+	assert.Equal(t, 1, legacyCalls)
+	assert.Equal(t, 1, nextCalls)
 }
 
 func TestMiddlewareWrapper(t *testing.T) {
-	assert := assert.New(t)
-
 	legacyCalls := 0
 	legacyFunc := func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -76,12 +72,40 @@ func TestMiddlewareWrapper(t *testing.T) {
 	}
 
 	wrapped := WrapperHandlerMiddleware(legacyFunc)
-	assert.Implements((*Middleware)(nil), wrapped)
-	assert.Equal(0, legacyCalls)
-	assert.Equal(0, nextCalls)
+	assert.Implements(t, (*Middleware)(nil), wrapped)
+	assert.Equal(t, 0, legacyCalls)
+	assert.Equal(t, 0, nextCalls)
 
 	wrapped.ServeHTTP(nil, nil, next)
 
-	assert.Equal(1, legacyCalls)
-	assert.Equal(1, nextCalls)
+	assert.Equal(t, 1, legacyCalls)
+	assert.Equal(t, 1, nextCalls)
+}
+
+func TestMiddlewareFunction(t *testing.T) {
+	legacyCalls := 0
+	mw := func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			legacyCalls++
+
+			h.ServeHTTP(w, r)
+		})
+	}
+
+	nextCalls := 0
+	next := func(w http.ResponseWriter, r *http.Request) {
+		nextCalls++
+	}
+
+	wrapped := WrapperHandlerMiddleware(mw)
+
+	mwfunc := MiddlewareFunc(wrapped)
+
+	assert.Equal(t, 0, legacyCalls)
+	assert.Equal(t, 0, nextCalls)
+
+	mwfunc(http.HandlerFunc(next)).ServeHTTP(nil, nil)
+
+	assert.Equal(t, 1, legacyCalls)
+	assert.Equal(t, 1, nextCalls)
 }

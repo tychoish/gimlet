@@ -19,6 +19,7 @@ type Server interface {
 	ListenAndServe() error
 	ListenAndServeTLS(string, string) error
 	Serve(net.Listener) error
+	ServeTLS(net.Listener, string, string) error
 	Shutdown(context.Context) error
 
 	// Run provides a simple wrapper around default http.Server
@@ -28,10 +29,6 @@ type Server interface {
 	// GetServer allows you to access the underlying http server.
 	GetServer() *http.Server
 }
-
-// TODO add ServeTLS when we can move up to 1.9+:
-//
-// ServeTLS(net.Listener, string, string) error
 
 type ServerConfig struct {
 	Timeout time.Duration

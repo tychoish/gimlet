@@ -16,8 +16,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/deciduosity/grip"
+	"github.com/go-chi/chi"
+	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
 )
@@ -41,11 +42,59 @@ type APIApp struct {
 	hasMerged      bool
 	prefix         string
 	port           int
-	router         *mux.Router
 	address        string
 	routes         []*APIRoute
-	middleware     []Middleware
-	wrappers       []Middleware
+
+	routerImpl RouterImplementation
+	router     *mux.Router
+	mux        *chi.Mux
+	middleware []interface{}
+	wrappers   []interface{}
+}
+
+// RouterImplementation describes the http Routing infrastructure the
+// Application will use to configure routes.
+type RouterImplementation int
+
+const (
+	// RouterImplUndefined routers are not configured and it is an
+	// error
+	//
+	// RouterImplGorilla uses Negroni and gorillia/mux for all
+	// routing functions.
+	//
+	// RouterImplChi uses the go-chi/chi routing infrastructure.
+	RouterImplUndefined = iota
+	RouterImplGorilla
+	RouterImplChi
+)
+
+// String implements fmt.Stringer for the RouterImplementation.
+func (r RouterImplementation) String() string {
+	switch r {
+	case RouterImplGorilla:
+		return "gorilla"
+	case RouterImplChi:
+		return "chi"
+	case RouterImplUndefined:
+		return "<undefined>"
+	default:
+		return "<invalid-router>"
+	}
+
+}
+
+// Validate returns an error if the router implementation is invalid
+// or not specified.
+func (r RouterImplementation) Validate() error {
+	switch r {
+	case RouterImplChi, RouterImplGorilla:
+		return nil
+	case RouterImplUndefined:
+		return errors.New("unspecified router implementation")
+	default:
+		return errors.Errorf("%d is not a valid router [%s]", r, r.String())
+	}
 }
 
 // NewApp returns a pointer to an application instance. These
@@ -57,16 +106,36 @@ func NewApp() *APIApp {
 	a := &APIApp{
 		port:        3000,
 		StrictSlash: true,
+		routerImpl:  RouterImplGorilla,
 	}
 
 	return a
 }
 
-// Router is the getter for an APIApp's router object. If thetr
-// application isn't resolved, then the error return value is non-nil.
+// Router is the getter for an APIApp's router object. If the
+// application isn't resolved or the app does not use the
+// negroni/Gorilla mux stack, then the error return value is non-nil.
 func (a *APIApp) Router() (*mux.Router, error) {
+	if a.routerImpl != RouterImplGorilla {
+		return nil, errors.Errorf("gorilla router is not configured [%s]", a.routerImpl)
+	}
+
 	if a.isResolved {
 		return a.router, nil
+	}
+	return nil, errors.New("application is not resolved")
+}
+
+// Mux is a getter for an APIApp's chi Muxer object. If the
+// application isn't resovled or uses a different routing stack, then
+// this is an error.
+func (a *APIApp) Mux() (*chi.Mux, error) {
+	if a.routerImpl != RouterImplChi {
+		return nil, errors.New("chi router is not configured")
+	}
+
+	if a.isResolved {
+		return a.mux, nil
 	}
 	return nil, errors.New("application is not resolved")
 }
@@ -77,8 +146,31 @@ func (a *APIApp) Router() (*mux.Router, error) {
 // All Middleware is added before the router. If your middleware
 // depends on executing within the context of the router/muxer, add it
 // as a wrapper.
-func (a *APIApp) AddMiddleware(m Middleware) {
+func (a *APIApp) AddMiddleware(m Middleware) *APIApp {
 	a.middleware = append(a.middleware, m)
+	return a
+}
+
+// AddMiddlewareFunc adds middleware in the form of a http.HandlerFunc
+// wrapper.
+//
+// All Middleware is added before the router. If your middleware
+// depends on executing within the context of the router/muxer, add it
+// as a wrapper.
+func (a *APIApp) AddMiddlewareFunc(m HandlerFuncWrapper) *APIApp {
+	a.middleware = append(a.middleware, m)
+	return a
+}
+
+// AddMiddlewareFunc adds middleware in the form of a http.HandlerFunc
+// wrapper.
+//
+// All Middleware is added before the router. If your middleware
+// depends on executing within the context of the router/muxer, add it
+// as a wrapper.
+func (a *APIApp) AddMiddlewareHandler(m HandlerWrapper) *APIApp {
+	a.middleware = append(a.middleware, m)
+	return a
 }
 
 // AddWrapper adds a negroni handler as a wrapper for a specific route.
@@ -86,20 +178,51 @@ func (a *APIApp) AddMiddleware(m Middleware) {
 // These wrappers execute in the context of the router/muxer. If your
 // middleware does not need access to the muxer's state, add it as a
 // middleware.
-func (a *APIApp) AddWrapper(m Middleware) {
+func (a *APIApp) AddWrapper(m Middleware) *APIApp {
 	a.wrappers = append(a.wrappers, m)
+	return a
+}
+
+// AddWrapperFunc adds middleware, defined as a HandlerFuncWrapper to
+// routes.
+//
+// These wrappers execute in the context of the router/muxer. If your
+// middleware does not need access to the muxer's state, add it as a
+// middleware.
+func (a *APIApp) AddWrapperFunc(m HandlerFuncWrapper) *APIApp {
+	a.wrappers = append(a.wrappers, m)
+	return a
+}
+
+// AddWrapperFunc adds middleware, defined as a HandlerWrapper to
+// routes.
+//
+// These wrappers execute in the context of the router/muxer. If your
+// middleware does not need access to the muxer's state, add it as a
+// middleware.
+func (a *APIApp) AddWrapperHandler(m HandlerWrapper) *APIApp {
+	a.wrappers = append(a.wrappers, m)
+	return a
 }
 
 // ResetMiddleware removes *all* middleware handlers from the current
 // application.
 func (a *APIApp) ResetMiddleware() {
-	a.middleware = []Middleware{}
+	a.middleware = []interface{}{}
+}
+
+// SetRouter allows you to configure which underlying router
+// infrastructure the Application will use. It is an error to merge
+// two applications with different routing implementations.
+func (a *APIApp) SetRouter(r RouterImplementation) *APIApp {
+	a.routerImpl = r
+	return a
 }
 
 // RestWrappers removes all route-specific middleware from the
 // current application.
 func (a *APIApp) RestWrappers() {
-	a.wrappers = []Middleware{}
+	a.wrappers = []interface{}{}
 }
 
 func (a *APIApp) AddCORS(opts cors.Options) *APIApp {
@@ -131,7 +254,7 @@ func (a *APIApp) Run(ctx context.Context) error {
 // BackgroundRun is a non-blocking form of Run that allows you to
 // manage a service running in the background.
 func (a *APIApp) BackgroundRun(ctx context.Context) (WaitFunc, error) {
-	n, err := a.getNegroni()
+	n, err := a.Handler()
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

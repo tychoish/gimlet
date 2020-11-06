@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/go-chi/chi"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
@@ -17,8 +18,20 @@ const maxRequestSize = 16 * 1024 * 1024 // 16 MB
 // returns a map of strings to decoded strings for all arguments
 // passed to the method in the URL. Use this helper function when
 // writing handler functions.
+//
+// GetVars only works with the Gorilla Mux rotuer and not with the chi router.
 func GetVars(r *http.Request) map[string]string {
 	return mux.Vars(r)
+}
+
+// GetParam provides a common interface for getting a URL parameter
+// that uses gorilla/mux or chi.
+func GetParam(r *http.Request, k string) string {
+	if vars := GetVars(r); vars != nil {
+		return vars[k]
+	}
+
+	return chi.URLParam(r, k)
 }
 
 // SetURLVars sets URL variables for testing purposes only.
