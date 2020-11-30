@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/deciduosity/grip"
-	"github.com/deciduosity/grip/message"
+	"github.com/cdr/grip"
+	"github.com/cdr/grip/message"
 )
 
 // ProxyOptions describes a simple reverse proxy service that can be

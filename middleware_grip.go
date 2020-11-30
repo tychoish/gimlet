@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/deciduosity/grip"
-	"github.com/deciduosity/grip/logging"
-	"github.com/deciduosity/grip/message"
-	"github.com/deciduosity/grip/recovery"
+	"github.com/cdr/grip"
+	"github.com/cdr/grip/logging"
+	"github.com/cdr/grip/message"
+	"github.com/cdr/grip/recovery"
 	"github.com/urfave/negroni"
 )
 

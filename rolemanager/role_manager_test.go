@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/deciduosity/gimlet"
+	"github.com/cdr/gimlet"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"

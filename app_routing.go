@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/deciduosity/grip"
+	"github.com/cdr/grip"
 )
 
 // APIRoute is a object that represents each route in the application

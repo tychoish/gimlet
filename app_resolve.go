@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/deciduosity/grip"
-	"github.com/deciduosity/grip/recovery"
+	"github.com/cdr/grip"
+	"github.com/cdr/grip/recovery"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/gorilla/mux"

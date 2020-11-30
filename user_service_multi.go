@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/deciduosity/grip"
+	"github.com/cdr/grip"
 	"github.com/pkg/errors"
 )
 

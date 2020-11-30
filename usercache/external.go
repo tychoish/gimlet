@@ -1,8 +1,8 @@
 package usercache
 
 import (
-	"github.com/deciduosity/gimlet"
-	"github.com/deciduosity/grip"
+	"github.com/cdr/gimlet"
+	"github.com/cdr/grip"
 	"github.com/pkg/errors"
 )
 

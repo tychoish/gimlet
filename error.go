@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/deciduosity/grip/message"
+	"github.com/cdr/grip/message"
 )
 
 // ErrorResponse implements the Error() interface and provides a

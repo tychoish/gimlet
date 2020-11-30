@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/deciduosity/gimlet"
-	"github.com/deciduosity/gimlet/usercache"
-	"github.com/deciduosity/gimlet/util"
-	"github.com/deciduosity/grip"
-	"github.com/deciduosity/grip/message"
+	"github.com/cdr/gimlet"
+	"github.com/cdr/gimlet/usercache"
+	"github.com/cdr/gimlet/util"
+	"github.com/cdr/grip"
+	"github.com/cdr/grip/message"
 	jwtverifier "github.com/okta/okta-jwt-verifier-golang"
 	"github.com/pkg/errors"
 )

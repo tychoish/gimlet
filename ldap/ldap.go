@@ -9,10 +9,10 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/deciduosity/gimlet"
-	"github.com/deciduosity/gimlet/usercache"
-	"github.com/deciduosity/grip"
-	"github.com/deciduosity/grip/message"
+	"github.com/cdr/gimlet"
+	"github.com/cdr/gimlet/usercache"
+	"github.com/cdr/grip"
+	"github.com/cdr/grip/message"
 	"github.com/pkg/errors"
 	ldap "gopkg.in/ldap.v3"
 )

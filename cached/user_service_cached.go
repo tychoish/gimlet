@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/deciduosity/gimlet"
-	"github.com/deciduosity/gimlet/usercache"
+	"github.com/cdr/gimlet"
+	"github.com/cdr/gimlet/usercache"
 	"github.com/pkg/errors"
 )
 

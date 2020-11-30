@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/deciduosity/gimlet"
-	"github.com/deciduosity/gimlet/usercache"
+	"github.com/cdr/gimlet"
+	"github.com/cdr/gimlet/usercache"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
 	ldap "gopkg.in/ldap.v3"

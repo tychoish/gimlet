@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/deciduosity/grip"
+	"github.com/cdr/grip"
 )
 
 // ResponsePages holds pagination metadata for a route built with the

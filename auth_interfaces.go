@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/deciduosity/grip"
-	"github.com/deciduosity/grip/message"
+	"github.com/cdr/grip"
+	"github.com/cdr/grip/message"
 )
 
 // User provides a common way of interacting with users from
