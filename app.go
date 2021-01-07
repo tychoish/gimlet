@@ -60,7 +60,7 @@ const (
 	// RouterImplUndefined routers are not configured and it is an
 	// error
 	//
-	// RouterImplGorilla uses Negroni and gorillia/mux for all
+	// RouterImplGorilla uses Negroni and gorilla/mux for all
 	// routing functions.
 	//
 	// RouterImplChi uses the go-chi/chi routing infrastructure.
@@ -127,7 +127,7 @@ func (a *APIApp) Router() (*mux.Router, error) {
 }
 
 // Mux is a getter for an APIApp's chi Muxer object. If the
-// application isn't resovled or uses a different routing stack, then
+// application isn't resolved or uses a different routing stack, then
 // this is an error.
 func (a *APIApp) Mux() (*chi.Mux, error) {
 	if a.routerImpl != RouterImplChi {

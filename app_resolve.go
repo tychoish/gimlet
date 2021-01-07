@@ -207,11 +207,11 @@ func (a *APIApp) attachRoutes(muxer interface{}, addAppPrefix bool) error {
 
 			if len(mws) == 0 {
 				for idx := range methods {
-					router.Method(methods[idx], routeString, http.HandlerFunc(route.handler))
+					router.Method(methods[idx], routeString, route.handler)
 				}
 			} else {
 				for idx := range methods {
-					router.With(mws...).Method(methods[idx], routeString, http.HandlerFunc(route.handler))
+					router.With(mws...).Method(methods[idx], routeString, route.handler)
 				}
 			}
 

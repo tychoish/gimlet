@@ -1,8 +1,8 @@
 # start project configuration
 name := gimlet
 buildDir := build
-packages := $(name) acl ldap okta rolemanager
-orgPath := github.com/deciduosity
+packages := $(name) acl ldap okta rolemanager usercache util
+orgPath := github.com/cdr
 projectPath := $(orgPath)/$(name)
 # end project configuration
 
@@ -58,7 +58,7 @@ coverageHtmlOutput := $(subst -,/,$(foreach target,$(packages),$(buildDir)/outpu
 
 # userfacing targets for basic build and development operations
 lint:$(buildDir)/output.lint
-$(buildDir): $(gopath)/src/$(projectPath)
+$(buildDir):
 	@mkdir -p $(buildDir)
 	$(goEnv) $(gobin) build ./.
 build-race: $(gopath)/src/$(projectPath)

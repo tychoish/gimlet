@@ -99,7 +99,7 @@ func convertMidlewares(mws ...interface{}) []func(http.Handler) http.Handler {
 	return out
 }
 
-func buildNegroni(router *mux.Router, mws ...interface{}) *negroni.Negroni {
+func buildNegroni(router http.Handler, mws ...interface{}) *negroni.Negroni {
 	n := negroni.New()
 
 	for _, m := range mws {
