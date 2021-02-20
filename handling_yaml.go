@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/cdr/grip"
+	"github.com/tychoish/grip"
 	yaml "gopkg.in/yaml.v2"
 )
 

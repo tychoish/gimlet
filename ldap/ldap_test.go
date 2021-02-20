@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cdr/gimlet"
-	"github.com/cdr/gimlet/usercache"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
+	"github.com/tychoish/gimlet"
+	"github.com/tychoish/gimlet/usercache"
 	ldap "gopkg.in/ldap.v3"
 )
 

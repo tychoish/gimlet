@@ -5,9 +5,9 @@ package gimlet
 import (
 	"net/http/httputil"
 
-	"github.com/cdr/grip"
-	"github.com/cdr/grip/level"
-	"github.com/cdr/grip/message"
+	"github.com/tychoish/grip"
+	"github.com/tychoish/grip/level"
+	"github.com/tychoish/grip/message"
 )
 
 // Proxy adds a simple reverse proxy handler to the specified route,

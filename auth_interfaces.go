@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/cdr/grip"
-	"github.com/cdr/grip/message"
+	"github.com/tychoish/grip"
+	"github.com/tychoish/grip/message"
 )
 
 // User provides a common way of interacting with users from

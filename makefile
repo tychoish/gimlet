@@ -2,7 +2,7 @@
 name := gimlet
 buildDir := build
 packages := $(name) acl ldap okta rolemanager usercache util
-orgPath := github.com/cdr
+orgPath := github.com/tychoish
 projectPath := $(orgPath)/$(name)
 # end project configuration
 

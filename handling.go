@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cdr/grip"
 	"github.com/pkg/errors"
+	"github.com/tychoish/grip"
 )
 
 func writeResponse(of OutputFormat, w http.ResponseWriter, code int, data interface{}) {

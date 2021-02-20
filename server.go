@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cdr/grip"
-	"github.com/cdr/grip/recovery"
 	"github.com/pkg/errors"
+	"github.com/tychoish/grip"
+	"github.com/tychoish/grip/recovery"
 )
 
 // Server provides a wrapper around *http.Server methods, with an

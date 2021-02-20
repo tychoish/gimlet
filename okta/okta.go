@@ -10,13 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cdr/gimlet"
-	"github.com/cdr/gimlet/usercache"
-	"github.com/cdr/gimlet/util"
-	"github.com/cdr/grip"
-	"github.com/cdr/grip/message"
 	jwtverifier "github.com/okta/okta-jwt-verifier-golang"
 	"github.com/pkg/errors"
+	"github.com/tychoish/gimlet"
+	"github.com/tychoish/gimlet/usercache"
+	"github.com/tychoish/gimlet/util"
+	"github.com/tychoish/grip"
+	"github.com/tychoish/grip/message"
 )
 
 // CreationOptions specify the options to create the manager.

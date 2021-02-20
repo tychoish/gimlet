@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/cdr/gimlet"
+	"github.com/tychoish/gimlet"
 )
 
 type updateRoleHandler struct {

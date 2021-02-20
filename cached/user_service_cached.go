@@ -4,9 +4,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/cdr/gimlet"
-	"github.com/cdr/gimlet/usercache"
 	"github.com/pkg/errors"
+	"github.com/tychoish/gimlet"
+	"github.com/tychoish/gimlet/usercache"
 )
 
 // cacheUserManager creates a thin wrapper around a user cache.

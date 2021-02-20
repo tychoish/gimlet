@@ -9,8 +9,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/cdr/grip"
-	"github.com/cdr/grip/message"
+	"github.com/tychoish/grip"
+	"github.com/tychoish/grip/message"
 )
 
 type htmlRenderer struct {

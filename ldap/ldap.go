@@ -9,11 +9,11 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/cdr/gimlet"
-	"github.com/cdr/gimlet/usercache"
-	"github.com/cdr/grip"
-	"github.com/cdr/grip/message"
 	"github.com/pkg/errors"
+	"github.com/tychoish/gimlet"
+	"github.com/tychoish/gimlet/usercache"
+	"github.com/tychoish/grip"
+	"github.com/tychoish/grip/message"
 	ldap "gopkg.in/ldap.v3"
 )
 

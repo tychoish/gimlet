@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cdr/grip"
-	"github.com/cdr/grip/message"
 	"github.com/pkg/errors"
+	"github.com/tychoish/grip"
+	"github.com/tychoish/grip/message"
 )
 
 // UserMiddlewareConfiguration is an keyed-arguments struct used to

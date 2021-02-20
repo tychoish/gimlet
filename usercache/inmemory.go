@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cdr/gimlet"
-	"github.com/cdr/gimlet/util"
 	"github.com/pkg/errors"
+	"github.com/tychoish/gimlet"
+	"github.com/tychoish/gimlet/util"
 )
 
 // NewInMemory returns a user cache which keeps entries in memory.

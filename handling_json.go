@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/cdr/grip"
+	"github.com/tychoish/grip"
 )
 
 // WriteJSONResponse writes a JSON document to the body of an HTTP

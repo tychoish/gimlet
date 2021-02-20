@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cdr/gimlet"
-	"github.com/cdr/gimlet/util"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tychoish/gimlet"
+	"github.com/tychoish/gimlet/util"
 )
 
 func TestCache(t *testing.T) {

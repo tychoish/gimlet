@@ -16,11 +16,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cdr/grip"
 	"github.com/go-chi/chi"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
+	"github.com/tychoish/grip"
 )
 
 // WaitFunc is a function type returned by some functions that allows

@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cdr/grip"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"github.com/tychoish/grip"
 )
 
 type RoutingSuite struct {

@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/cdr/gimlet"
-	"github.com/cdr/gimlet/rolemanager"
 	"github.com/stretchr/testify/assert"
+	"github.com/tychoish/gimlet"
+	"github.com/tychoish/gimlet/rolemanager"
 )
 
 func TestRoleRouteHandlers(t *testing.T) {

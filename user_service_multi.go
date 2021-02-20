@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/cdr/grip"
 	"github.com/pkg/errors"
+	"github.com/tychoish/grip"
 )
 
 type multiUserManager struct {

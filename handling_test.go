@@ -8,9 +8,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/cdr/grip"
-	"github.com/cdr/grip/send"
 	"github.com/stretchr/testify/assert"
+	"github.com/tychoish/grip"
+	"github.com/tychoish/grip/send"
 )
 
 type writeResponseBaseFunc func(http.ResponseWriter, int, interface{})

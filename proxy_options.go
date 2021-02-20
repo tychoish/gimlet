@@ -6,9 +6,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/cdr/grip"
-	"github.com/cdr/grip/message"
 	"github.com/gorilla/mux"
+	"github.com/tychoish/grip"
+	"github.com/tychoish/grip/message"
 )
 
 // ProxyOptions describes a simple reverse proxy service that can be

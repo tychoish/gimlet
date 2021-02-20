@@ -3,10 +3,10 @@ package gimlet
 import (
 	"net/http"
 
-	"github.com/cdr/grip"
 	"github.com/go-chi/chi"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	"github.com/tychoish/grip"
 	"github.com/urfave/negroni"
 )
 

@@ -1,7 +1,7 @@
 package usercache
 
 import (
-	"github.com/cdr/gimlet"
+	"github.com/tychoish/gimlet"
 )
 
 // PutUserGetToken returns a new token. Updating the user's TTL should happen in

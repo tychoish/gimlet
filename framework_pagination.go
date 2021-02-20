@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/cdr/grip"
+	"github.com/tychoish/grip"
 )
 
 // ResponsePages holds pagination metadata for a route built with the

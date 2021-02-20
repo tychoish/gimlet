@@ -1,8 +1,8 @@
 package gimlet
 
 import (
-	"github.com/cdr/grip"
-	"github.com/cdr/grip/message"
+	"github.com/tychoish/grip"
+	"github.com/tychoish/grip/message"
 )
 
 type BasicUserOptions struct {

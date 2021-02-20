@@ -1,9 +1,9 @@
 package usercache
 
 import (
-	"github.com/cdr/gimlet"
-	"github.com/cdr/grip"
 	"github.com/pkg/errors"
+	"github.com/tychoish/gimlet"
+	"github.com/tychoish/grip"
 )
 
 // ExternalOptions provides functions to inject the functionality of the user

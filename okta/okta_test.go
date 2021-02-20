@@ -12,14 +12,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cdr/gimlet"
-	"github.com/cdr/gimlet/testutil"
-	"github.com/cdr/gimlet/usercache"
-	"github.com/cdr/grip"
 	jwtverifier "github.com/okta/okta-jwt-verifier-golang"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tychoish/gimlet"
+	"github.com/tychoish/gimlet/testutil"
+	"github.com/tychoish/gimlet/usercache"
+	"github.com/tychoish/grip"
 )
 
 func TestUserManagerCreation(t *testing.T) {

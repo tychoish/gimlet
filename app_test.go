@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cdr/grip"
-	"github.com/cdr/grip/level"
-	"github.com/cdr/grip/send"
 	"github.com/stretchr/testify/suite"
+	"github.com/tychoish/grip"
+	"github.com/tychoish/grip/level"
+	"github.com/tychoish/grip/send"
 )
 
 // AppSuite contains tests of the APIApp system. Tests of the route
