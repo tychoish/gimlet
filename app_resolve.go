@@ -9,7 +9,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"github.com/tychoish/grip"
+	"github.com/tychoish/emt"
 	"github.com/tychoish/grip/recovery"
 	"github.com/urfave/negroni"
 )
@@ -39,7 +39,7 @@ func (a *APIApp) Resolve() error {
 		return errors.Wrap(err, "improperly specified router implementation")
 	}
 
-	catcher := grip.NewBasicCatcher()
+	catcher := emt.NewBasicCatcher()
 	for m := range iterMerge(a.middleware, a.wrappers) {
 		switch mw := m.(type) {
 		case HandlerFuncWrapper:
@@ -153,7 +153,7 @@ func (a *APIApp) attachRoutes(muxer interface{}, addAppPrefix bool) error {
 		router.StrictSlash(a.StrictSlash)
 	}
 
-	catcher := grip.NewCatcher()
+	catcher := emt.NewCatcher()
 	for _, route := range a.routes {
 		if !route.IsValid() {
 			catcher.Errorf("%s is not a valid route, skipping", route)

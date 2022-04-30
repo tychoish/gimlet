@@ -11,7 +11,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tychoish/grip"
-	"github.com/tychoish/grip/logging"
 	"github.com/tychoish/grip/message"
 	"github.com/tychoish/grip/send"
 	"github.com/urfave/negroni"
@@ -20,13 +19,13 @@ import (
 func TestReqestLogger(t *testing.T) {
 	assert := assert.New(t)
 
-	sender, err := send.NewInternalLogger("test", grip.GetSender().Level())
+	sender, err := send.NewInternalLogger("test", grip.Sender().Level())
 	assert.NoError(err)
 	middlewear := NewAppLogger().(*appLogging)
-	middlewear.Journaler = logging.MakeGrip(sender)
+	middlewear.Logger = grip.NewLogger(sender)
 
 	next := func(w http.ResponseWriter, r *http.Request) {
-		middlewear.Journaler.Info("hello")
+		middlewear.Logger.Info("hello")
 	}
 	assert.False(sender.HasMessage())
 	req := &http.Request{
@@ -44,12 +43,12 @@ func TestReqestLogger(t *testing.T) {
 func TestReqestPanicLogger(t *testing.T) {
 	assert := assert.New(t)
 
-	sender, err := send.NewInternalLogger("test", grip.GetSender().Level())
+	sender, err := send.NewInternalLogger("test", grip.Sender().Level())
 	assert.NoError(err)
-	middlewear := NewRecoveryLogger(logging.MakeGrip(sender)).(*appRecoveryLogger)
+	middlewear := NewRecoveryLogger(grip.NewLogger(sender)).(*appRecoveryLogger)
 
 	next := func(w http.ResponseWriter, r *http.Request) {
-		middlewear.Journaler.Info("hello")
+		middlewear.Logger.Info("hello")
 	}
 	assert.False(sender.HasMessage())
 	req := &http.Request{
@@ -67,9 +66,9 @@ func TestReqestPanicLogger(t *testing.T) {
 func TestReqestPanicLoggerWithPanic(t *testing.T) {
 	assert := assert.New(t)
 
-	sender, err := send.NewInternalLogger("test", grip.GetSender().Level())
+	sender, err := send.NewInternalLogger("test", grip.Sender().Level())
 	assert.NoError(err)
-	middlewear := NewRecoveryLogger(logging.MakeGrip(sender))
+	middlewear := NewRecoveryLogger(grip.NewLogger(sender))
 
 	next := func(w http.ResponseWriter, r *http.Request) {
 		panic("oops")
@@ -106,13 +105,12 @@ func TestDefaultGripMiddlwareSetters(t *testing.T) {
 	r = r.WithContext(context.Background())
 	ctx := r.Context()
 
-	var l grip.Journaler
+	var l grip.Logger
 	assert.NotPanics(func() { l = GetLogger(ctx) })
 	assert.NotNil(l)
-	assert.Equal(l.GetSender(), grip.GetSender())
 
 	now := time.Now()
-	logger := logging.MakeGrip(send.MakeInternalLogger())
+	logger := grip.NewLogger(send.MakeInternalLogger())
 
 	assert.NotEqual(logger, GetLogger(ctx))
 	assert.Zero(getRequestStartAt(ctx))
@@ -153,9 +151,9 @@ func TestLoggingAnnotationRetreive(t *testing.T) {
 func TestLoggingAnnotation(t *testing.T) {
 	assert := assert.New(t)
 
-	sender, err := send.NewInternalLogger("test", grip.GetSender().Level())
+	sender, err := send.NewInternalLogger("test", grip.Sender().Level())
 	assert.NoError(err)
-	middlewear := NewRecoveryLogger(logging.MakeGrip(sender))
+	middlewear := NewRecoveryLogger(grip.NewLogger(sender))
 
 	var called bool
 	next := func(w http.ResponseWriter, r *http.Request) {

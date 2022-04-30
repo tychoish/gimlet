@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/tychoish/emt"
 	"github.com/tychoish/grip"
 	"github.com/tychoish/grip/recovery"
 )
@@ -45,7 +46,7 @@ type ServerConfig struct {
 // ServerConfig that would make it impossible to render a server from
 // the configuration.
 func (c *ServerConfig) Validate() error {
-	catcher := grip.NewBasicCatcher()
+	catcher := emt.NewBasicCatcher()
 	catcher.NewWhen(c.TLS != nil && c.TLS.Certificates == nil, "tls config specified without certificates")
 	catcher.NewWhen(c.Handler == nil && c.App == nil, "must specify a handler or a gimlet app")
 	catcher.NewWhen(c.Handler != nil && c.App != nil && !c.handlerGenerated, "can only specify a handler or an app")

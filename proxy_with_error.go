@@ -1,3 +1,4 @@
+//go:build go1.11
 // +build go1.11
 
 package gimlet
@@ -6,8 +7,8 @@ import (
 	"net/http/httputil"
 
 	"github.com/tychoish/grip"
-	"github.com/tychoish/grip/level"
 	"github.com/tychoish/grip/message"
+	"github.com/tychoish/grip/send"
 )
 
 // Proxy adds a simple reverse proxy handler to the specified route,
@@ -27,7 +28,7 @@ func (r *APIRoute) Proxy(opts ProxyOptions) *APIRoute {
 
 	r.handler = (&httputil.ReverseProxy{
 		Transport:    opts.Transport,
-		ErrorLog:     grip.MakeStandardLogger(level.Warning),
+		ErrorLog:     send.MakeStandard(grip.Sender()),
 		Director:     opts.director,
 		ErrorHandler: opts.ErrorHandler,
 	}).ServeHTTP

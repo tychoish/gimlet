@@ -1,6 +1,7 @@
 package gimlet
 
 import (
+	"github.com/tychoish/emt"
 	"github.com/tychoish/grip"
 	"github.com/tychoish/grip/message"
 )
@@ -18,7 +19,7 @@ type BasicUserOptions struct {
 }
 
 func NewBasicUserOptions(id string) (BasicUserOptions, error) {
-	catcher := grip.NewBasicCatcher()
+	catcher := emt.NewBasicCatcher()
 	catcher.NewWhen(id == "", "ID must not be empty")
 	if catcher.HasErrors() {
 		return BasicUserOptions{}, catcher.Resolve()

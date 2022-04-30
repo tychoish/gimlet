@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/tychoish/emt"
 	"github.com/tychoish/gimlet"
-	"github.com/tychoish/grip"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -406,7 +406,7 @@ func (m *mongoBackedRoleManager) resourcesPipeline(resourceType string, resource
 
 func (m *mongoBackedRoleManager) Clear() error {
 	ctx := context.Background()
-	catcher := grip.NewBasicCatcher()
+	catcher := emt.NewBasicCatcher()
 	catcher.Add(m.client.Database(m.db).Collection(m.scopeColl).Drop(ctx))
 	catcher.Add(m.client.Database(m.db).Collection(m.roleColl).Drop(ctx))
 	cmd := map[string]string{
@@ -765,7 +765,7 @@ func (b *base) isValidPermission(permission string) bool {
 }
 
 func (b *base) IsValidPermissions(permissions gimlet.Permissions) error {
-	catcher := grip.NewBasicCatcher()
+	catcher := emt.NewBasicCatcher()
 	for permission := range permissions {
 		catcher.AddWhen(!b.isValidPermission(permission), errors.Errorf("'%s' is not a valid permission", permission))
 	}

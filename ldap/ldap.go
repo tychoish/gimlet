@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/tychoish/emt"
 	"github.com/tychoish/gimlet"
 	"github.com/tychoish/gimlet/usercache"
 	"github.com/tychoish/grip"
@@ -105,7 +106,7 @@ func NewUserService(opts CreationOpts) (gimlet.UserManager, error) {
 }
 
 func (opts CreationOpts) validate() error {
-	catcher := grip.NewBasicCatcher()
+	catcher := emt.NewBasicCatcher()
 
 	if opts.URL == "" || opts.UserPath == "" || opts.ServicePath == "" {
 		catcher.Add(errors.Errorf("URL ('%s'), UserPath ('%s') and ServicePath ('%s') must be provided",
@@ -467,7 +468,7 @@ func (u *userService) getSearchPaths() []string {
 }
 
 func (u *userService) getUserFromLDAP(username string) (gimlet.User, error) {
-	catcher := grip.NewBasicCatcher()
+	catcher := emt.NewBasicCatcher()
 	var (
 		found  bool
 		err    error

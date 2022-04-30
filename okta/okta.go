@@ -12,6 +12,7 @@ import (
 
 	jwtverifier "github.com/okta/okta-jwt-verifier-golang"
 	"github.com/pkg/errors"
+	"github.com/tychoish/emt"
 	"github.com/tychoish/gimlet"
 	"github.com/tychoish/gimlet/usercache"
 	"github.com/tychoish/gimlet/util"
@@ -54,7 +55,7 @@ type CreationOptions struct {
 }
 
 func (opts *CreationOptions) Validate() error {
-	catcher := grip.NewBasicCatcher()
+	catcher := emt.NewBasicCatcher()
 	catcher.NewWhen(opts.ClientID == "", "must specify client ID")
 	catcher.NewWhen(opts.ClientSecret == "", "must specify client secret")
 	catcher.NewWhen(opts.RedirectURI == "", "must specify redirect URI")
@@ -172,15 +173,15 @@ func (m *userManager) GetUserByToken(ctx context.Context, token string) (gimlet.
 
 // reauthorizeGroup attempts to reauthorize the user based on their groups.
 func (m *userManager) reauthorizeGroup(accessToken, refreshToken string) error {
-	catcher := grip.NewBasicCatcher()
+	catcher := emt.NewBasicCatcher()
 	err := m.doValidateAccessToken(accessToken)
-	catcher.Wrap(err, "invalid access token")
+	catcher.ErrorfWhen(err != nil, "invalid access token: %w", err)
 	if err == nil {
 		user, err := m.generateUserFromInfo(accessToken, refreshToken)
-		catcher.Wrap(err, "could not generate user from Okta user info")
+		catcher.ErrorfWhen(err != nil, "could not generate user from Okta user info: %w", err)
 		if err == nil {
 			_, err = m.cache.Put(user)
-			catcher.Wrap(err, "could not update reauthorized user in cache")
+			catcher.ErrorfWhen(err != nil, "could not update reauthorized user in cache: %w", err)
 			if err == nil {
 				return nil
 			}
@@ -212,12 +213,12 @@ func (m *userManager) reauthorizeID(username string, tokens *tokenResponse) erro
 	} else {
 		return errors.New("ID token is missing email claim")
 	}
-	catcher := grip.NewBasicCatcher()
+	catcher := emt.NewBasicCatcher()
 	user, err := makeUserFromIDToken(idToken, tokens.AccessToken, tokens.RefreshToken, m.reconciliateID)
-	catcher.Wrap(err, "could not generate user from Okta ID token")
+	catcher.ErrorfWhen(err != nil, "could not generate user from Okta ID token: %w", err)
 	if err == nil {
 		_, err = m.cache.Put(user)
-		catcher.Wrapf(err, "could not update reauthorized user in cache")
+		catcher.ErrorfWhen(err != nil, "could not update reauthorized user in cache: %w", err)
 		if err == nil {
 			return nil
 		}
@@ -235,7 +236,7 @@ func (m *userManager) reauthorizeID(username string, tokens *tokenResponse) erro
 // reauthorize them again.
 func (m *userManager) ReauthorizeUser(user gimlet.User) error {
 	refreshToken := user.GetRefreshToken()
-	catcher := grip.NewBasicCatcher()
+	catcher := emt.NewBasicCatcher()
 
 	if m.validateGroups {
 		accessToken := user.GetAccessToken()
@@ -243,7 +244,7 @@ func (m *userManager) ReauthorizeUser(user gimlet.User) error {
 			return errors.Errorf("user '%s' cannot reauthorize because user is missing access token", user.Username())
 		}
 		err := m.reauthorizeGroup(accessToken, refreshToken)
-		catcher.Wrap(err, "could not reauthorize user with current access token")
+		catcher.ErrorfWhen(err != nil, "could not reauthorize user with current access token: %w", err)
 		if err == nil {
 			return nil
 		}
@@ -253,17 +254,17 @@ func (m *userManager) ReauthorizeUser(user gimlet.User) error {
 		return errors.Errorf("user '%s' cannot refresh tokens because refresh token is missing", user.Username())
 	}
 	tokens, err := m.refreshTokens(context.Background(), refreshToken)
-	catcher.Wrap(err, "could not refresh authorization tokens")
+	catcher.ErrorfWhen(err != nil, "could not refresh authorization tokens: %w", err)
 	if err == nil {
 		if m.validateGroups {
 			err = m.reauthorizeGroup(tokens.AccessToken, tokens.RefreshToken)
-			catcher.Wrap(err, "could not reauthorize user after refreshing tokens")
+			catcher.ErrorfWhen(err != nil, "could not reauthorize user after refreshing tokens: %w", err)
 			if err == nil {
 				return nil
 			}
 		} else {
 			err = m.reauthorizeID(user.Username(), tokens)
-			catcher.Wrap(err, "could not reauthorize user after refreshing tokens")
+			catcher.ErrorfWhen(err != nil, "could not reauthorize user after refreshing tokens: %w", err)
 			if err == nil {
 				return nil
 			}
@@ -522,24 +523,24 @@ func (m *userManager) generateUserFromInfo(accessToken, refreshToken string) (gi
 // getCookies gets the nonce and the state required in the redirect callback as
 // well as the originally requested URI from the cookies.
 func getCookies(r *http.Request) (nonce, state, requestURI string, err error) {
-	catcher := grip.NewBasicCatcher()
+	catcher := emt.NewBasicCatcher()
 	for _, cookie := range r.Cookies() {
 		if cookie.Name == nonceCookieName {
 			nonce, err = url.QueryUnescape(cookie.Value)
 			if err != nil {
-				catcher.Wrap(err, "could not decode nonce cookie")
+				catcher.ErrorfWhen(err != nil, "could not decode nonce cookie: %w", err)
 			}
 		}
 		if cookie.Name == stateCookieName {
 			state, err = url.QueryUnescape(cookie.Value)
 			if err != nil {
-				catcher.Wrap(err, "could not decode state cookie")
+				catcher.ErrorfWhen(err != nil, "could not decode state cookie: %w", err)
 			}
 		}
 		if cookie.Name == requestURICookieName {
 			requestURI, err = url.QueryUnescape(cookie.Value)
 			if err != nil {
-				catcher.Wrap(err, "could not decode requestURI cookie")
+				catcher.ErrorfWhen(err != nil, "could not decode requestURI cookie: %w", err)
 			}
 		}
 	}
@@ -682,9 +683,9 @@ func (m *userManager) redeemTokens(ctx context.Context, query string) (*tokenRes
 		return nil, errors.Wrap(err, "request to redeem token returned error")
 	}
 	if resp.StatusCode != http.StatusOK {
-		catcher := grip.NewBasicCatcher()
+		catcher := emt.NewBasicCatcher()
 		catcher.Errorf("received unexpected status code %d", resp.StatusCode)
-		catcher.Wrap(resp.Body.Close(), "error closing response body")
+		catcher.ErrorfWhen(err != nil, "error closing response body: %w", resp.Body.Close())
 		return nil, catcher.Resolve()
 	}
 	tokens := &tokenResponse{}
@@ -731,9 +732,9 @@ func (m *userManager) getUserInfo(ctx context.Context, accessToken string) (*use
 		return nil, errors.Wrap(err, "error during request for user info")
 	}
 	if resp.StatusCode != http.StatusOK {
-		catcher := grip.NewBasicCatcher()
+		catcher := emt.NewBasicCatcher()
 		catcher.Errorf("received unexpected status code %d", resp.StatusCode)
-		catcher.Wrap(resp.Body.Close(), "error closing response body")
+		catcher.ErrorfWhen(err != nil, "error closing response body: %w", resp.Body.Close())
 		return nil, catcher.Resolve()
 	}
 	userInfo := &userInfoResponse{}
@@ -798,9 +799,9 @@ func (m *userManager) getTokenInfo(ctx context.Context, token, tokenType string)
 		return nil, errors.Wrap(err, "request to introspect token returned error")
 	}
 	if resp.StatusCode != http.StatusOK {
-		catcher := grip.NewBasicCatcher()
+		catcher := emt.NewBasicCatcher()
 		catcher.Errorf("received unexpected status code %d", resp.StatusCode)
-		catcher.Wrap(resp.Body.Close(), "error closing response body")
+		catcher.ErrorfWhen(err != nil, "error closing response body: %w", resp.Body.Close())
 		return nil, catcher.Resolve()
 	}
 

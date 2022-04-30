@@ -6,7 +6,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"github.com/tychoish/grip"
+	"github.com/tychoish/emt"
 	"github.com/urfave/negroni"
 )
 
@@ -16,7 +16,7 @@ import (
 // Eventually the router will become an implementation detail of
 // this/related functions.
 func AssembleHandlerGorilla(router *mux.Router, apps ...*APIApp) (http.Handler, error) {
-	catcher := grip.NewBasicCatcher()
+	catcher := emt.NewBasicCatcher()
 	mws := []interface{}{}
 
 	seenPrefixes := make(map[string]struct{})
@@ -46,7 +46,7 @@ func AssembleHandlerGorilla(router *mux.Router, apps ...*APIApp) (http.Handler, 
 
 func AssembleHandlerChi(router *chi.Mux, apps ...*APIApp) (out http.Handler, err error) {
 	out = router
-	catcher := grip.NewBasicCatcher()
+	catcher := emt.NewBasicCatcher()
 	mws := []interface{}{}
 
 	seenPrefixes := make(map[string]struct{})
@@ -171,7 +171,7 @@ func (a *APIApp) Merge(apps ...*APIApp) error {
 		return errors.New("can only call merge once per root application")
 	}
 
-	catcher := grip.NewBasicCatcher()
+	catcher := emt.NewBasicCatcher()
 	seenPrefixes := make(map[string]struct{})
 
 	for _, app := range apps {

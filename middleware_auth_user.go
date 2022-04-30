@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/tychoish/grip"
+	"github.com/tychoish/emt"
 	"github.com/tychoish/grip/message"
 )
 
@@ -28,7 +28,7 @@ type UserMiddlewareConfiguration struct {
 // Validate ensures that the UserMiddlewareConfiguration is correct
 // and internally consistent.
 func (umc *UserMiddlewareConfiguration) Validate() error {
-	catcher := grip.NewBasicCatcher()
+	catcher := emt.NewBasicCatcher()
 
 	if !umc.SkipCookie {
 		if umc.CookieName == "" {

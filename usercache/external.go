@@ -2,8 +2,8 @@ package usercache
 
 import (
 	"github.com/pkg/errors"
+	"github.com/tychoish/emt"
 	"github.com/tychoish/gimlet"
-	"github.com/tychoish/grip"
 )
 
 // ExternalOptions provides functions to inject the functionality of the user
@@ -17,7 +17,7 @@ type ExternalOptions struct {
 }
 
 func (opts ExternalOptions) Validate() error {
-	catcher := grip.NewBasicCatcher()
+	catcher := emt.NewBasicCatcher()
 	catcher.NewWhen(opts.PutUserGetToken == nil, "PutUserGetToken must be defined")
 	catcher.NewWhen(opts.GetUserByToken == nil, "GetUserByToken must be defined")
 	catcher.NewWhen(opts.ClearUserToken == nil, "ClearUserToken must be defined")

@@ -142,12 +142,12 @@ func (r mangledResponseWriter) Write(b []byte) (int, error) { return 0, errors.N
 
 func TestWriteResponseErrorLogs(t *testing.T) {
 	defer func(s send.Sender) {
-		assert.NoError(t, grip.SetSender(s))
-	}(grip.GetSender())
+		grip.SetGlobalLogger(grip.NewLogger(s))
+	}(grip.Sender())
 	assert := assert.New(t)
 	sender := send.MakeInternalLogger()
 	rw := mangledResponseWriter{httptest.NewRecorder()}
-	assert.NoError(grip.SetSender(sender))
+	grip.SetGlobalLogger(grip.NewLogger(sender))
 
 	assert.False(sender.HasMessage())
 	writeResponse(JSON, rw, 200, []byte("foo"))

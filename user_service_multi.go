@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
-	"github.com/tychoish/grip"
+	"github.com/tychoish/emt"
 )
 
 type multiUserManager struct {
@@ -147,7 +147,7 @@ func (um *multiUserManager) tryReadWriteManagers(managerFunc func(UserManager) (
 }
 
 func tryManagers(managerFunc func(UserManager) (success bool, err error), managers []UserManager) error {
-	catcher := grip.NewBasicCatcher()
+	catcher := emt.NewBasicCatcher()
 	for _, m := range managers {
 		success, err := managerFunc(m)
 		if err == nil {

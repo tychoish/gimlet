@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/tychoish/grip"
-	"github.com/tychoish/grip/logging"
 	"github.com/tychoish/grip/message"
 	"github.com/tychoish/grip/recovery"
 	"github.com/urfave/negroni"
@@ -24,15 +23,15 @@ const (
 // middlewear resembles the basic tracking provided by Negroni's
 // standard logging system.
 type appLogging struct {
-	grip.Journaler
+	grip.Logger
 }
 
 // NewAppLogger creates an logging middlear instance suitable for use
 // with Negroni. Sets the logging configuration to be the same as the
 // default global grip logging object.
-func NewAppLogger() Middleware { return &appLogging{logging.MakeGrip(grip.GetSender())} }
+func NewAppLogger() Middleware { return &appLogging{grip.NewLogger(grip.Sender())} }
 
-func setServiceLogger(r *http.Request, logger grip.Journaler) *http.Request {
+func setServiceLogger(r *http.Request, logger grip.Logger) *http.Request {
 	return r.WithContext(context.WithValue(r.Context(), loggerKey, logger))
 }
 
@@ -79,27 +78,27 @@ func getRequestStartAt(ctx context.Context) time.Time {
 // GetLogger produces a special logger attached to the request. If no
 // request is attached, GetLogger returns a logger instance wrapping
 // the global sender.
-func GetLogger(ctx context.Context) grip.Journaler {
+func GetLogger(ctx context.Context) grip.Logger {
 	if rv := ctx.Value(loggerKey); rv != nil {
-		if l, ok := rv.(grip.Journaler); ok {
+		if l, ok := rv.(grip.Logger); ok {
 			return l
 		}
 	}
 
-	return logging.MakeGrip(grip.GetSender())
+	return grip.NewLogger(grip.Sender())
 }
 
 // Logs the request path, the beginning of every request as well as
 // the duration upon completion and the status of the response.
 func (l *appLogging) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	r = setupLogger(l.Journaler, r)
+	r = setupLogger(l.Logger, r)
 
 	next(rw, r)
 	res := rw.(negroni.ResponseWriter)
-	finishLogger(l.Journaler, r, res)
+	finishLogger(l.Logger, r, res)
 }
 
-func setupLogger(logger grip.Journaler, r *http.Request) *http.Request {
+func setupLogger(logger grip.Logger, r *http.Request) *http.Request {
 	r = setServiceLogger(r, logger)
 	remote := r.Header.Get(remoteAddrHeaderName)
 	if remote != "" {
@@ -122,7 +121,7 @@ func setupLogger(logger grip.Journaler, r *http.Request) *http.Request {
 	return r
 }
 
-func finishLogger(logger grip.Journaler, r *http.Request, res negroni.ResponseWriter) {
+func finishLogger(logger grip.Logger, r *http.Request, res negroni.ResponseWriter) {
 	ctx := r.Context()
 	startAt := getRequestStartAt(ctx)
 	dur := time.Since(startAt)
@@ -148,23 +147,23 @@ func finishLogger(logger grip.Journaler, r *http.Request, res negroni.ResponseWr
 
 // This is largely duplicated from the above, but lets us optionally
 type appRecoveryLogger struct {
-	grip.Journaler
+	grip.Logger
 }
 
 // NewRecoveryLogger logs request start, end, and recovers from panics
 // (logging the panic as well).
-func NewRecoveryLogger(j grip.Journaler) Middleware { return &appRecoveryLogger{Journaler: j} }
+func NewRecoveryLogger(j grip.Logger) Middleware { return &appRecoveryLogger{Logger: j} }
 
 // MakeRecoveryLoger constructs a middleware layer that logs request
 // start, end, and recovers from panics (logging the panic as well).
 //
 // This logger uses the default grip logger.
 func MakeRecoveryLogger() Middleware {
-	return &appRecoveryLogger{Journaler: logging.MakeGrip(grip.GetSender())}
+	return &appRecoveryLogger{Logger: grip.NewLogger(grip.Sender())}
 }
 
 func (l *appRecoveryLogger) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	r = setupLogger(l.Journaler, r)
+	r = setupLogger(l.Logger, r)
 	ctx := r.Context()
 
 	defer func() {
@@ -174,7 +173,7 @@ func (l *appRecoveryLogger) ServeHTTP(rw http.ResponseWriter, r *http.Request, n
 			}
 			rw.WriteHeader(http.StatusInternalServerError)
 
-			_ = recovery.SendMessageWithPanicError(err, nil, l.Journaler, message.Fields{
+			_ = recovery.SendMessageWithPanicError(err, nil, l.Logger, message.Fields{
 				"action":   "aborted",
 				"request":  GetRequestID(ctx),
 				"duration": time.Since(getRequestStartAt(ctx)),
@@ -192,5 +191,5 @@ func (l *appRecoveryLogger) ServeHTTP(rw http.ResponseWriter, r *http.Request, n
 	next(rw, r)
 
 	res := rw.(negroni.ResponseWriter)
-	finishLogger(l.Journaler, r, res)
+	finishLogger(l.Logger, r, res)
 }

@@ -41,7 +41,7 @@ func TestDefaultAppSuite(t *testing.T) {
 func (s *AppSuite) SetupTest() {
 	s.app = s.constructor()
 	s.app.AddMiddleware(MakeRecoveryLogger())
-	err := grip.GetSender().SetLevel(send.LevelInfo{Default: level.Debug, Threshold: level.Info})
+	err := grip.Sender().SetLevel(send.LevelInfo{Default: level.Debug, Threshold: level.Info})
 	s.NoError(err)
 }
 

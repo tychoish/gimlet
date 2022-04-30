@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/tychoish/emt"
 	"github.com/tychoish/grip"
 )
 
@@ -40,7 +41,7 @@ func (r *ResponsePages) GetLinks(route string) string {
 // Validate checks each page, if present, and ensures that the
 // pagination metadata are consistent.
 func (r *ResponsePages) Validate() error {
-	catcher := grip.NewCatcher()
+	catcher := emt.NewCatcher()
 	for _, p := range []*Page{r.Next, r.Prev} {
 		if p == nil {
 			continue
