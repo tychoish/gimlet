@@ -12,7 +12,7 @@ import (
 
 	jwtverifier "github.com/okta/okta-jwt-verifier-golang"
 	"github.com/pkg/errors"
-	"github.com/tychoish/emt"
+	"github.com/tychoish/fun/erc"
 	"github.com/tychoish/gimlet"
 	"github.com/tychoish/gimlet/usercache"
 	"github.com/tychoish/gimlet/util"
@@ -55,23 +55,23 @@ type CreationOptions struct {
 }
 
 func (opts *CreationOptions) Validate() error {
-	catcher := emt.NewBasicCatcher()
-	catcher.NewWhen(opts.ClientID == "", "must specify client ID")
-	catcher.NewWhen(opts.ClientSecret == "", "must specify client secret")
-	catcher.NewWhen(opts.RedirectURI == "", "must specify redirect URI")
-	catcher.NewWhen(opts.Issuer == "", "must specify issuer")
+	catcher := &erc.Collector{}
+	erc.When(catcher, opts.ClientID == "", "must specify client ID")
+	erc.When(catcher, opts.ClientSecret == "", "must specify client secret")
+	erc.When(catcher, opts.RedirectURI == "", "must specify redirect URI")
+	erc.When(catcher, opts.Issuer == "", "must specify issuer")
 	if opts.ValidateGroups {
-		catcher.NewWhen(opts.UserGroup == "", "must specify user group")
+		erc.When(catcher, opts.UserGroup == "", "must specify user group")
 	}
-	catcher.NewWhen(opts.CookiePath == "", "must specify cookie path")
-	catcher.NewWhen(opts.LoginCookieName == "", "must specify login cookie name")
+	erc.When(catcher, opts.CookiePath == "", "must specify cookie path")
+	erc.When(catcher, opts.LoginCookieName == "", "must specify login cookie name")
 	if opts.LoginCookieTTL == time.Duration(0) {
 		opts.LoginCookieTTL = 365 * time.Hour
 	}
-	catcher.NewWhen(opts.UserCache == nil && opts.ExternalCache == nil, "must specify one user cache")
-	catcher.NewWhen(opts.UserCache != nil && opts.ExternalCache != nil, "must specify exactly one user cache")
-	catcher.NewWhen(opts.GetHTTPClient == nil, "must specify function to get HTTP clients")
-	catcher.NewWhen(opts.PutHTTPClient == nil, "must specify function to put HTTP clients")
+	erc.When(catcher, opts.UserCache == nil && opts.ExternalCache == nil, "must specify one user cache")
+	erc.When(catcher, opts.UserCache != nil && opts.ExternalCache != nil, "must specify exactly one user cache")
+	erc.When(catcher, opts.GetHTTPClient == nil, "must specify function to get HTTP clients")
+	erc.When(catcher, opts.PutHTTPClient == nil, "must specify function to put HTTP clients")
 	if opts.CookieTTL == time.Duration(0) {
 		opts.CookieTTL = time.Hour
 	}
@@ -173,15 +173,15 @@ func (m *userManager) GetUserByToken(ctx context.Context, token string) (gimlet.
 
 // reauthorizeGroup attempts to reauthorize the user based on their groups.
 func (m *userManager) reauthorizeGroup(accessToken, refreshToken string) error {
-	catcher := emt.NewBasicCatcher()
+	catcher := &erc.Collector{}
 	err := m.doValidateAccessToken(accessToken)
-	catcher.ErrorfWhen(err != nil, "invalid access token: %w", err)
+	erc.Whenf(catcher, err != nil, "invalid access token: %w", err)
 	if err == nil {
 		user, err := m.generateUserFromInfo(accessToken, refreshToken)
-		catcher.ErrorfWhen(err != nil, "could not generate user from Okta user info: %w", err)
+		erc.Whenf(catcher, err != nil, "could not generate user from Okta user info: %w", err)
 		if err == nil {
 			_, err = m.cache.Put(user)
-			catcher.ErrorfWhen(err != nil, "could not update reauthorized user in cache: %w", err)
+			erc.Whenf(catcher, err != nil, "could not update reauthorized user in cache: %w", err)
 			if err == nil {
 				return nil
 			}
@@ -213,12 +213,12 @@ func (m *userManager) reauthorizeID(username string, tokens *tokenResponse) erro
 	} else {
 		return errors.New("ID token is missing email claim")
 	}
-	catcher := emt.NewBasicCatcher()
+	catcher := &erc.Collector{}
 	user, err := makeUserFromIDToken(idToken, tokens.AccessToken, tokens.RefreshToken, m.reconciliateID)
-	catcher.ErrorfWhen(err != nil, "could not generate user from Okta ID token: %w", err)
+	erc.Whenf(catcher, err != nil, "could not generate user from Okta ID token: %w", err)
 	if err == nil {
 		_, err = m.cache.Put(user)
-		catcher.ErrorfWhen(err != nil, "could not update reauthorized user in cache: %w", err)
+		erc.Whenf(catcher, err != nil, "could not update reauthorized user in cache: %w", err)
 		if err == nil {
 			return nil
 		}
@@ -236,7 +236,7 @@ func (m *userManager) reauthorizeID(username string, tokens *tokenResponse) erro
 // reauthorize them again.
 func (m *userManager) ReauthorizeUser(user gimlet.User) error {
 	refreshToken := user.GetRefreshToken()
-	catcher := emt.NewBasicCatcher()
+	catcher := &erc.Collector{}
 
 	if m.validateGroups {
 		accessToken := user.GetAccessToken()
@@ -244,7 +244,7 @@ func (m *userManager) ReauthorizeUser(user gimlet.User) error {
 			return errors.Errorf("user '%s' cannot reauthorize because user is missing access token", user.Username())
 		}
 		err := m.reauthorizeGroup(accessToken, refreshToken)
-		catcher.ErrorfWhen(err != nil, "could not reauthorize user with current access token: %w", err)
+		erc.Whenf(catcher, err != nil, "could not reauthorize user with current access token: %w", err)
 		if err == nil {
 			return nil
 		}
@@ -254,17 +254,17 @@ func (m *userManager) ReauthorizeUser(user gimlet.User) error {
 		return errors.Errorf("user '%s' cannot refresh tokens because refresh token is missing", user.Username())
 	}
 	tokens, err := m.refreshTokens(context.Background(), refreshToken)
-	catcher.ErrorfWhen(err != nil, "could not refresh authorization tokens: %w", err)
+	erc.Whenf(catcher, err != nil, "could not refresh authorization tokens: %w", err)
 	if err == nil {
 		if m.validateGroups {
 			err = m.reauthorizeGroup(tokens.AccessToken, tokens.RefreshToken)
-			catcher.ErrorfWhen(err != nil, "could not reauthorize user after refreshing tokens: %w", err)
+			erc.Whenf(catcher, err != nil, "could not reauthorize user after refreshing tokens: %w", err)
 			if err == nil {
 				return nil
 			}
 		} else {
 			err = m.reauthorizeID(user.Username(), tokens)
-			catcher.ErrorfWhen(err != nil, "could not reauthorize user after refreshing tokens: %w", err)
+			erc.Whenf(catcher, err != nil, "could not reauthorize user after refreshing tokens: %w", err)
 			if err == nil {
 				return nil
 			}
@@ -523,29 +523,29 @@ func (m *userManager) generateUserFromInfo(accessToken, refreshToken string) (gi
 // getCookies gets the nonce and the state required in the redirect callback as
 // well as the originally requested URI from the cookies.
 func getCookies(r *http.Request) (nonce, state, requestURI string, err error) {
-	catcher := emt.NewBasicCatcher()
+	catcher := &erc.Collector{}
 	for _, cookie := range r.Cookies() {
 		if cookie.Name == nonceCookieName {
 			nonce, err = url.QueryUnescape(cookie.Value)
 			if err != nil {
-				catcher.ErrorfWhen(err != nil, "could not decode nonce cookie: %w", err)
+				erc.Whenf(catcher, err != nil, "could not decode nonce cookie: %w", err)
 			}
 		}
 		if cookie.Name == stateCookieName {
 			state, err = url.QueryUnescape(cookie.Value)
 			if err != nil {
-				catcher.ErrorfWhen(err != nil, "could not decode state cookie: %w", err)
+				erc.Whenf(catcher, err != nil, "could not decode state cookie: %w", err)
 			}
 		}
 		if cookie.Name == requestURICookieName {
 			requestURI, err = url.QueryUnescape(cookie.Value)
 			if err != nil {
-				catcher.ErrorfWhen(err != nil, "could not decode requestURI cookie: %w", err)
+				erc.Whenf(catcher, err != nil, "could not decode requestURI cookie: %w", err)
 			}
 		}
 	}
-	catcher.NewWhen(nonce == "", "nonce could not be retrieved from cookies")
-	catcher.NewWhen(state == "", "state could not be retrieved from cookies")
+	erc.When(catcher, nonce == "", "nonce could not be retrieved from cookies")
+	erc.When(catcher, state == "", "state could not be retrieved from cookies")
 	grip.NoticeWhen(requestURI == "", "request URI could not be retrieved from cookies")
 	if requestURI == "" {
 		requestURI = "/"
@@ -683,9 +683,9 @@ func (m *userManager) redeemTokens(ctx context.Context, query string) (*tokenRes
 		return nil, errors.Wrap(err, "request to redeem token returned error")
 	}
 	if resp.StatusCode != http.StatusOK {
-		catcher := emt.NewBasicCatcher()
-		catcher.Errorf("received unexpected status code %d", resp.StatusCode)
-		catcher.ErrorfWhen(err != nil, "error closing response body: %w", resp.Body.Close())
+		catcher := &erc.Collector{}
+		catcher.Add(fmt.Errorf("received unexpected status code %d", resp.StatusCode))
+		erc.Whenf(catcher, err != nil, "error closing response body: %w", resp.Body.Close())
 		return nil, catcher.Resolve()
 	}
 	tokens := &tokenResponse{}
@@ -732,9 +732,9 @@ func (m *userManager) getUserInfo(ctx context.Context, accessToken string) (*use
 		return nil, errors.Wrap(err, "error during request for user info")
 	}
 	if resp.StatusCode != http.StatusOK {
-		catcher := emt.NewBasicCatcher()
-		catcher.Errorf("received unexpected status code %d", resp.StatusCode)
-		catcher.ErrorfWhen(err != nil, "error closing response body: %w", resp.Body.Close())
+		catcher := &erc.Collector{}
+		catcher.Add(fmt.Errorf("received unexpected status code %d", resp.StatusCode))
+		erc.Whenf(catcher, err != nil, "error closing response body: %w", resp.Body.Close())
 		return nil, catcher.Resolve()
 	}
 	userInfo := &userInfoResponse{}
@@ -799,9 +799,9 @@ func (m *userManager) getTokenInfo(ctx context.Context, token, tokenType string)
 		return nil, errors.Wrap(err, "request to introspect token returned error")
 	}
 	if resp.StatusCode != http.StatusOK {
-		catcher := emt.NewBasicCatcher()
-		catcher.Errorf("received unexpected status code %d", resp.StatusCode)
-		catcher.ErrorfWhen(err != nil, "error closing response body: %w", resp.Body.Close())
+		catcher := &erc.Collector{}
+		catcher.Add(fmt.Errorf("received unexpected status code %d", resp.StatusCode))
+		erc.Whenf(catcher, err != nil, "error closing response body: %w", resp.Body.Close())
 		return nil, catcher.Resolve()
 	}
 

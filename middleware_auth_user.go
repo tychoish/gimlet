@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/tychoish/emt"
+	"github.com/tychoish/fun/erc"
 	"github.com/tychoish/grip/message"
 )
 
@@ -28,31 +28,31 @@ type UserMiddlewareConfiguration struct {
 // Validate ensures that the UserMiddlewareConfiguration is correct
 // and internally consistent.
 func (umc *UserMiddlewareConfiguration) Validate() error {
-	catcher := emt.NewBasicCatcher()
+	catcher := &erc.Collector{}
 
 	if !umc.SkipCookie {
 		if umc.CookieName == "" {
-			catcher.New("must specify cookie name when cookie authentication is enabled")
+			catcher.Add(errors.New("must specify cookie name when cookie authentication is enabled"))
 		}
 
 		if umc.CookieTTL < time.Second {
-			catcher.New("cookie timeout is less than a second")
+			catcher.Add(errors.New("cookie timeout is less than a second"))
 		}
 
 		if umc.CookiePath == "" {
 			umc.CookiePath = "/"
 		} else if !strings.HasPrefix(umc.CookiePath, "/") {
-			catcher.New("cookie path must begin with '/'")
+			catcher.Add(errors.New("cookie path must begin with '/'"))
 		}
 	}
 
 	if !umc.SkipHeaderCheck {
 		if umc.HeaderUserName == "" {
-			catcher.New("when header auth is enabled, must specify a header user name")
+			catcher.Add(errors.New("when header auth is enabled, must specify a header user name"))
 		}
 
 		if umc.HeaderKeyName == "" {
-			catcher.New("when header auth is enabled, must specify a header key name")
+			catcher.Add(errors.New("when header auth is enabled, must specify a header key name"))
 		}
 	}
 

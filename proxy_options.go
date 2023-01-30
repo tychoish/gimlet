@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/tychoish/emt"
+	"github.com/tychoish/fun/erc"
 	"github.com/tychoish/grip"
 	"github.com/tychoish/grip/message"
 )
@@ -34,9 +34,9 @@ func (opts *ProxyOptions) Validate() error {
 		opts.RemotePrefix = "/" + opts.RemotePrefix
 	}
 
-	catcher := emt.NewBasicCatcher()
-	catcher.NewWhen(len(opts.TargetPool) == 0 && opts.FindTarget == nil, "must specify a way to resolve target host")
-	catcher.NewWhen(len(opts.TargetPool) >= 1 && opts.FindTarget != nil, "cannot specify more than one target resolution option")
+	catcher := &erc.Collector{}
+	erc.When(catcher, len(opts.TargetPool) == 0 && opts.FindTarget == nil, "must specify a way to resolve target host")
+	erc.When(catcher, len(opts.TargetPool) >= 1 && opts.FindTarget != nil, "cannot specify more than one target resolution option")
 	return catcher.Resolve()
 }
 

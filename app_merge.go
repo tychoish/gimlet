@@ -1,12 +1,13 @@
 package gimlet
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"github.com/tychoish/emt"
+	"github.com/tychoish/fun/erc"
 	"github.com/urfave/negroni"
 )
 
@@ -16,7 +17,7 @@ import (
 // Eventually the router will become an implementation detail of
 // this/related functions.
 func AssembleHandlerGorilla(router *mux.Router, apps ...*APIApp) (http.Handler, error) {
-	catcher := emt.NewBasicCatcher()
+	catcher := &erc.Collector{}
 	mws := []interface{}{}
 
 	seenPrefixes := make(map[string]struct{})
@@ -46,14 +47,14 @@ func AssembleHandlerGorilla(router *mux.Router, apps ...*APIApp) (http.Handler, 
 
 func AssembleHandlerChi(router *chi.Mux, apps ...*APIApp) (out http.Handler, err error) {
 	out = router
-	catcher := emt.NewBasicCatcher()
+	catcher := &erc.Collector{}
 	mws := []interface{}{}
 
 	seenPrefixes := make(map[string]struct{})
 
 	defer func() {
 		if p := recover(); p != nil {
-			catcher.Errorf("chi.Mux encountered error: %+v", p)
+			catcher.Add(fmt.Errorf("chi.Mux encountered error: %+v", p))
 		}
 		err = catcher.Resolve()
 		if catcher.HasErrors() {
@@ -171,13 +172,13 @@ func (a *APIApp) Merge(apps ...*APIApp) error {
 		return errors.New("can only call merge once per root application")
 	}
 
-	catcher := emt.NewBasicCatcher()
+	catcher := &erc.Collector{}
 	seenPrefixes := make(map[string]struct{})
 
 	for _, app := range apps {
 		if app.prefix != "" {
 			if _, ok := seenPrefixes[app.prefix]; ok {
-				catcher.Errorf("route prefix '%s' defined more than once", app.prefix)
+				catcher.Add(fmt.Errorf("route prefix '%s' defined more than once", app.prefix))
 			}
 			seenPrefixes[app.prefix] = struct{}{}
 
@@ -193,7 +194,7 @@ func (a *APIApp) Merge(apps ...*APIApp) error {
 		} else if app.middleware == nil {
 			for _, r := range app.routes {
 				if a.containsRoute(r.route, r.version, r.methods) {
-					catcher.Errorf("cannot merge route '%s' with existing application that already has this route defined", r.route)
+					catcher.Add(fmt.Errorf("cannot merge route '%s' with existing application that already has this route defined", r.route))
 				}
 			}
 
@@ -201,7 +202,7 @@ func (a *APIApp) Merge(apps ...*APIApp) error {
 		} else {
 			for _, route := range app.routes {
 				if a.containsRoute(route.route, route.version, route.methods) {
-					catcher.Errorf("cannot merge route '%s' with existing application that already has this route defined", route.route)
+					catcher.Add(fmt.Errorf("cannot merge route '%s' with existing application that already has this route defined", route.route))
 				}
 
 				r := a.Route().Route(route.route).Version(route.version)

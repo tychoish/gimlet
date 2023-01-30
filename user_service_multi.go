@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
-	"github.com/tychoish/emt"
+	"github.com/tychoish/fun/erc"
 )
 
 type multiUserManager struct {
@@ -147,7 +147,7 @@ func (um *multiUserManager) tryReadWriteManagers(managerFunc func(UserManager) (
 }
 
 func tryManagers(managerFunc func(UserManager) (success bool, err error), managers []UserManager) error {
-	catcher := emt.NewBasicCatcher()
+	catcher := &erc.Collector{}
 	for _, m := range managers {
 		success, err := managerFunc(m)
 		if err == nil {

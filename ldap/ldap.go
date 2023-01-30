@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/tychoish/emt"
+	"github.com/tychoish/fun/erc"
 	"github.com/tychoish/gimlet"
 	"github.com/tychoish/gimlet/usercache"
 	"github.com/tychoish/grip"
@@ -106,7 +106,7 @@ func NewUserService(opts CreationOpts) (gimlet.UserManager, error) {
 }
 
 func (opts CreationOpts) validate() error {
-	catcher := emt.NewBasicCatcher()
+	catcher := &erc.Collector{}
 
 	if opts.URL == "" || opts.UserPath == "" || opts.ServicePath == "" {
 		catcher.Add(errors.Errorf("URL ('%s'), UserPath ('%s') and ServicePath ('%s') must be provided",
@@ -114,15 +114,15 @@ func (opts CreationOpts) validate() error {
 	}
 
 	if opts.ServiceUserName != "" {
-		catcher.NewWhen(opts.ServiceUserPassword == "" || opts.ServiceUserPath == "", "if using service user, LDAP service user name, password, and path must be provided")
+		erc.When(catcher, opts.ServiceUserPassword == "" || opts.ServiceUserPath == "", "if using service user, LDAP service user name, password, and path must be provided")
 	} else {
-		catcher.NewWhen(opts.ServiceUserPassword != "" || opts.ServiceUserPath != "", "if using service user, LDAP service user name, password, and path must be provided")
+		erc.When(catcher, opts.ServiceUserPassword != "" || opts.ServiceUserPath != "", "if using service user, LDAP service user name, password, and path must be provided")
 	}
 
-	catcher.NewWhen(opts.UserGroup == "", "LDAP user group cannot be empty")
+	erc.When(catcher, opts.UserGroup == "", "LDAP user group cannot be empty")
 
 	if opts.UserCache == nil && opts.ExternalCache == nil {
-		catcher.New("must specify user cache")
+		catcher.Add(errors.New("must specify user cache"))
 	}
 
 	return catcher.Resolve()
@@ -468,7 +468,7 @@ func (u *userService) getSearchPaths() []string {
 }
 
 func (u *userService) getUserFromLDAP(username string) (gimlet.User, error) {
-	catcher := emt.NewBasicCatcher()
+	catcher := &erc.Collector{}
 	var (
 		found  bool
 		err    error

@@ -9,7 +9,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"github.com/tychoish/emt"
+	"github.com/tychoish/fun/erc"
 	"github.com/tychoish/grip/recovery"
 	"github.com/urfave/negroni"
 )
@@ -39,7 +39,7 @@ func (a *APIApp) Resolve() error {
 		return errors.Wrap(err, "improperly specified router implementation")
 	}
 
-	catcher := emt.NewBasicCatcher()
+	catcher := &erc.Collector{}
 	for m := range iterMerge(a.middleware, a.wrappers) {
 		switch mw := m.(type) {
 		case HandlerFuncWrapper:
@@ -49,7 +49,7 @@ func (a *APIApp) Resolve() error {
 		case Middleware:
 			continue
 		default:
-			catcher.Errorf("middleware of type %T is not supported as middleware", mw)
+			catcher.Add(fmt.Errorf("middleware of type %T is not supported as middleware", mw))
 		}
 	}
 
@@ -153,10 +153,10 @@ func (a *APIApp) attachRoutes(muxer interface{}, addAppPrefix bool) error {
 		router.StrictSlash(a.StrictSlash)
 	}
 
-	catcher := emt.NewCatcher()
+	catcher := &erc.Collector{}
 	for _, route := range a.routes {
 		if !route.IsValid() {
-			catcher.Errorf("%s is not a valid route, skipping", route)
+			catcher.Add(fmt.Errorf("%s is not a valid route, skipping", route))
 			continue
 		}
 
@@ -171,7 +171,7 @@ func (a *APIApp) attachRoutes(muxer interface{}, addAppPrefix bool) error {
 		} else if a.NoVersions {
 			routeString = route.resolveLegacyRoute(a, addAppPrefix)
 		} else {
-			catcher.Errorf("skipping '%s', because of versioning error", route)
+			catcher.Add(fmt.Errorf("skipping '%s', because of versioning error", route))
 			continue
 		}
 
@@ -186,7 +186,7 @@ func (a *APIApp) attachRoutes(muxer interface{}, addAppPrefix bool) error {
 				continue
 			default:
 				invalidMiddleware = true
-				catcher.Errorf("mw#%d for %s is %T which is not supported", idx, route.String(), mw)
+				catcher.Add(fmt.Errorf("mw#%d for %s is %T which is not supported", idx, route.String(), mw))
 			}
 		}
 

@@ -2,7 +2,7 @@ package usercache
 
 import (
 	"github.com/pkg/errors"
-	"github.com/tychoish/emt"
+	"github.com/tychoish/fun/erc"
 	"github.com/tychoish/gimlet"
 )
 
@@ -17,12 +17,12 @@ type ExternalOptions struct {
 }
 
 func (opts ExternalOptions) Validate() error {
-	catcher := emt.NewBasicCatcher()
-	catcher.NewWhen(opts.PutUserGetToken == nil, "PutUserGetToken must be defined")
-	catcher.NewWhen(opts.GetUserByToken == nil, "GetUserByToken must be defined")
-	catcher.NewWhen(opts.ClearUserToken == nil, "ClearUserToken must be defined")
-	catcher.NewWhen(opts.GetUserByID == nil, "GetUserByID must be defined")
-	catcher.NewWhen(opts.GetOrCreateUser == nil, "GetOrCreateUser must be defined")
+	catcher := &erc.Collector{}
+	erc.When(catcher, opts.PutUserGetToken == nil, "PutUserGetToken must be defined")
+	erc.When(catcher, opts.GetUserByToken == nil, "GetUserByToken must be defined")
+	erc.When(catcher, opts.ClearUserToken == nil, "ClearUserToken must be defined")
+	erc.When(catcher, opts.GetUserByID == nil, "GetUserByID must be defined")
+	erc.When(catcher, opts.GetOrCreateUser == nil, "GetOrCreateUser must be defined")
 	return catcher.Resolve()
 }
 
