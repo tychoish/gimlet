@@ -56,22 +56,22 @@ type CreationOptions struct {
 
 func (opts *CreationOptions) Validate() error {
 	catcher := &erc.Collector{}
-	erc.When(catcher, opts.ClientID == "", "must specify client ID")
-	erc.When(catcher, opts.ClientSecret == "", "must specify client secret")
-	erc.When(catcher, opts.RedirectURI == "", "must specify redirect URI")
-	erc.When(catcher, opts.Issuer == "", "must specify issuer")
+	catcher.When(opts.ClientID == "", "must specify client ID")
+	catcher.When(opts.ClientSecret == "", "must specify client secret")
+	catcher.When(opts.RedirectURI == "", "must specify redirect URI")
+	catcher.When(opts.Issuer == "", "must specify issuer")
 	if opts.ValidateGroups {
-		erc.When(catcher, opts.UserGroup == "", "must specify user group")
+		catcher.When(opts.UserGroup == "", "must specify user group")
 	}
-	erc.When(catcher, opts.CookiePath == "", "must specify cookie path")
-	erc.When(catcher, opts.LoginCookieName == "", "must specify login cookie name")
+	catcher.When(opts.CookiePath == "", "must specify cookie path")
+	catcher.When(opts.LoginCookieName == "", "must specify login cookie name")
 	if opts.LoginCookieTTL == time.Duration(0) {
 		opts.LoginCookieTTL = 365 * time.Hour
 	}
-	erc.When(catcher, opts.UserCache == nil && opts.ExternalCache == nil, "must specify one user cache")
-	erc.When(catcher, opts.UserCache != nil && opts.ExternalCache != nil, "must specify exactly one user cache")
-	erc.When(catcher, opts.GetHTTPClient == nil, "must specify function to get HTTP clients")
-	erc.When(catcher, opts.PutHTTPClient == nil, "must specify function to put HTTP clients")
+	catcher.When(opts.UserCache == nil && opts.ExternalCache == nil, "must specify one user cache")
+	catcher.When(opts.UserCache != nil && opts.ExternalCache != nil, "must specify exactly one user cache")
+	catcher.When(opts.GetHTTPClient == nil, "must specify function to get HTTP clients")
+	catcher.When(opts.PutHTTPClient == nil, "must specify function to put HTTP clients")
 	if opts.CookieTTL == time.Duration(0) {
 		opts.CookieTTL = time.Hour
 	}
@@ -544,8 +544,8 @@ func getCookies(r *http.Request) (nonce, state, requestURI string, err error) {
 			}
 		}
 	}
-	erc.When(catcher, nonce == "", "nonce could not be retrieved from cookies")
-	erc.When(catcher, state == "", "state could not be retrieved from cookies")
+	catcher.When(nonce == "", "nonce could not be retrieved from cookies")
+	catcher.When(state == "", "state could not be retrieved from cookies")
 	grip.NoticeWhen(requestURI == "", "request URI could not be retrieved from cookies")
 	if requestURI == "" {
 		requestURI = "/"
@@ -684,8 +684,8 @@ func (m *userManager) redeemTokens(ctx context.Context, query string) (*tokenRes
 	}
 	if resp.StatusCode != http.StatusOK {
 		catcher := &erc.Collector{}
-		catcher.Add(fmt.Errorf("received unexpected status code %d", resp.StatusCode))
-		erc.Whenf(catcher, err != nil, "error closing response body: %w", resp.Body.Close())
+		catcher.Errorf("received unexpected status code %d", resp.StatusCode)
+		catcher.Wrap(resp.Body.Close(), "error closing response body")
 		return nil, catcher.Resolve()
 	}
 	tokens := &tokenResponse{}
@@ -733,8 +733,8 @@ func (m *userManager) getUserInfo(ctx context.Context, accessToken string) (*use
 	}
 	if resp.StatusCode != http.StatusOK {
 		catcher := &erc.Collector{}
-		catcher.Add(fmt.Errorf("received unexpected status code %d", resp.StatusCode))
-		erc.Whenf(catcher, err != nil, "error closing response body: %w", resp.Body.Close())
+		catcher.Errorf("received unexpected status code %d", resp.StatusCode)
+		catcher.Wrap(resp.Body.Close(), "error closing response body")
 		return nil, catcher.Resolve()
 	}
 	userInfo := &userInfoResponse{}
@@ -800,8 +800,8 @@ func (m *userManager) getTokenInfo(ctx context.Context, token, tokenType string)
 	}
 	if resp.StatusCode != http.StatusOK {
 		catcher := &erc.Collector{}
-		catcher.Add(fmt.Errorf("received unexpected status code %d", resp.StatusCode))
-		erc.Whenf(catcher, err != nil, "error closing response body: %w", resp.Body.Close())
+		catcher.Errorf("received unexpected status code %d", resp.StatusCode)
+		catcher.Wrap(resp.Body.Close(), "error closing response body")
 		return nil, catcher.Resolve()
 	}
 

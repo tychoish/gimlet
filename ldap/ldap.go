@@ -114,12 +114,12 @@ func (opts CreationOpts) validate() error {
 	}
 
 	if opts.ServiceUserName != "" {
-		erc.When(catcher, opts.ServiceUserPassword == "" || opts.ServiceUserPath == "", "if using service user, LDAP service user name, password, and path must be provided")
+		catcher.When(opts.ServiceUserPassword == "" || opts.ServiceUserPath == "", "if using service user, LDAP service user name, password, and path must be provided")
 	} else {
-		erc.When(catcher, opts.ServiceUserPassword != "" || opts.ServiceUserPath != "", "if using service user, LDAP service user name, password, and path must be provided")
+		catcher.When(opts.ServiceUserPassword != "" || opts.ServiceUserPath != "", "if using service user, LDAP service user name, password, and path must be provided")
 	}
 
-	erc.When(catcher, opts.UserGroup == "", "LDAP user group cannot be empty")
+	catcher.When(opts.UserGroup == "", "LDAP user group cannot be empty")
 
 	if opts.UserCache == nil && opts.ExternalCache == nil {
 		catcher.Add(errors.New("must specify user cache"))

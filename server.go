@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tychoish/fun/erc"
+	"github.com/tychoish/fun/ers"
 	"github.com/tychoish/grip"
 	"github.com/tychoish/grip/recovery"
 )
@@ -47,12 +48,12 @@ type ServerConfig struct {
 // the configuration.
 func (c *ServerConfig) Validate() error {
 	catcher := &erc.Collector{}
-	erc.When(catcher, c.TLS != nil && c.TLS.Certificates == nil, "tls config specified without certificates")
-	erc.When(catcher, c.Handler == nil && c.App == nil, "must specify a handler or a gimlet app")
-	erc.When(catcher, c.Handler != nil && c.App != nil && !c.handlerGenerated, "can only specify a handler or an app")
-	erc.When(catcher, c.Address == "", "must specify an address")
-	erc.Whenf(catcher, c.Timeout < time.Second, "must specify timeout greater than a second, '%s'", c.Timeout)
-	erc.Whenf(catcher, c.Timeout > 10*time.Minute, "must specify timeout less than 10 minutes, '%s'", c.Timeout)
+	catcher.When(c.TLS != nil && c.TLS.Certificates == nil, ers.Error("tls config specified without certificates"))
+	catcher.When(c.Handler == nil && c.App == nil, ers.Error("must specify a handler or a gimlet app"))
+	catcher.When(c.Handler != nil && c.App != nil && !c.handlerGenerated, ers.Error("can only specify a handler or an app"))
+	catcher.When(c.Address == "", ers.Error("must specify an address"))
+	catcher.Whenf(c.Timeout < time.Second, "must specify timeout greater than a second, '%s'", c.Timeout)
+	catcher.Whenf(c.Timeout > 10*time.Minute, "must specify timeout less than 10 minutes, '%s'", c.Timeout)
 
 	_, _, err := net.SplitHostPort(c.Address)
 	catcher.Add(err)

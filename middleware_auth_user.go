@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tychoish/fun/erc"
+	"github.com/tychoish/fun/ers"
 	"github.com/tychoish/grip/message"
 )
 
@@ -32,27 +33,27 @@ func (umc *UserMiddlewareConfiguration) Validate() error {
 
 	if !umc.SkipCookie {
 		if umc.CookieName == "" {
-			catcher.Add(errors.New("must specify cookie name when cookie authentication is enabled"))
+			catcher.Add(ers.Error("must specify cookie name when cookie authentication is enabled"))
 		}
 
 		if umc.CookieTTL < time.Second {
-			catcher.Add(errors.New("cookie timeout is less than a second"))
+			catcher.Add(ers.Error("cookie timeout is less than a second"))
 		}
 
 		if umc.CookiePath == "" {
 			umc.CookiePath = "/"
 		} else if !strings.HasPrefix(umc.CookiePath, "/") {
-			catcher.Add(errors.New("cookie path must begin with '/'"))
+			catcher.Add(ers.Error("cookie path must begin with '/'"))
 		}
 	}
 
 	if !umc.SkipHeaderCheck {
 		if umc.HeaderUserName == "" {
-			catcher.Add(errors.New("when header auth is enabled, must specify a header user name"))
+			catcher.Add(ers.Error("when header auth is enabled, must specify a header user name"))
 		}
 
 		if umc.HeaderKeyName == "" {
-			catcher.Add(errors.New("when header auth is enabled, must specify a header key name"))
+			catcher.Add(ers.Error("when header auth is enabled, must specify a header key name"))
 		}
 	}
 

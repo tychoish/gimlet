@@ -38,7 +38,7 @@ func AssembleHandlerGorilla(router *mux.Router, apps ...*APIApp) (http.Handler, 
 		}
 	}
 
-	if catcher.HasErrors() {
+	if !catcher.Ok() {
 		return nil, catcher.Resolve()
 	}
 
@@ -57,7 +57,7 @@ func AssembleHandlerChi(router *chi.Mux, apps ...*APIApp) (out http.Handler, err
 			catcher.Add(fmt.Errorf("chi.Mux encountered error: %+v", p))
 		}
 		err = catcher.Resolve()
-		if catcher.HasErrors() {
+		if !catcher.Ok() {
 			out = nil
 		}
 	}()

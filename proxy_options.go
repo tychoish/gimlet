@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/tychoish/fun/erc"
+	"github.com/tychoish/fun/ers"
 	"github.com/tychoish/grip"
 	"github.com/tychoish/grip/message"
 )
@@ -35,8 +36,8 @@ func (opts *ProxyOptions) Validate() error {
 	}
 
 	catcher := &erc.Collector{}
-	erc.When(catcher, len(opts.TargetPool) == 0 && opts.FindTarget == nil, "must specify a way to resolve target host")
-	erc.When(catcher, len(opts.TargetPool) >= 1 && opts.FindTarget != nil, "cannot specify more than one target resolution option")
+	catcher.When(len(opts.TargetPool) == 0 && opts.FindTarget == nil, ers.Error("must specify a way to resolve target host"))
+	catcher.When(len(opts.TargetPool) >= 1 && opts.FindTarget != nil, ers.Error("cannot specify more than one target resolution option"))
 	return catcher.Resolve()
 }
 

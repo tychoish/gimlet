@@ -53,7 +53,7 @@ func (a *APIApp) Resolve() error {
 		}
 	}
 
-	if catcher.HasErrors() {
+	if !catcher.Ok() {
 		return catcher.Resolve()
 	}
 

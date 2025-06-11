@@ -2,6 +2,7 @@ package gimlet
 
 import (
 	"github.com/tychoish/fun/erc"
+	"github.com/tychoish/fun/ers"
 	"github.com/tychoish/grip"
 	"github.com/tychoish/grip/message"
 )
@@ -20,8 +21,8 @@ type BasicUserOptions struct {
 
 func NewBasicUserOptions(id string) (BasicUserOptions, error) {
 	catcher := &erc.Collector{}
-	erc.When(catcher, id == "", "ID must not be empty")
-	if catcher.HasErrors() {
+	catcher.When(id == "", ers.Error("ID must not be empty"))
+	if !catcher.Ok() {
 		return BasicUserOptions{}, catcher.Resolve()
 	}
 	return BasicUserOptions{
