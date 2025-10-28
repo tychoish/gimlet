@@ -19,8 +19,8 @@ import (
 func TestReqestLogger(t *testing.T) {
 	assert := assert.New(t)
 
-	sender, err := send.NewInternalLogger("test", grip.Sender().Level())
-	assert.NoError(err)
+	sender := send.NewInternal(128)
+	sender.SetPriority(grip.Sender().Priority())
 	middlewear := NewAppLogger().(*appLogging)
 	middlewear.Logger = grip.NewLogger(sender)
 
@@ -43,8 +43,8 @@ func TestReqestLogger(t *testing.T) {
 func TestReqestPanicLogger(t *testing.T) {
 	assert := assert.New(t)
 
-	sender, err := send.NewInternalLogger("test", grip.Sender().Level())
-	assert.NoError(err)
+	sender := send.NewInternal(128)
+	sender.SetPriority(grip.Sender().Priority())
 	middlewear := NewRecoveryLogger(grip.NewLogger(sender)).(*appRecoveryLogger)
 
 	next := func(w http.ResponseWriter, r *http.Request) {
@@ -66,8 +66,9 @@ func TestReqestPanicLogger(t *testing.T) {
 func TestReqestPanicLoggerWithPanic(t *testing.T) {
 	assert := assert.New(t)
 
-	sender, err := send.NewInternalLogger("test", grip.Sender().Level())
-	assert.NoError(err)
+	sender := send.NewInternal(128)
+	sender.SetPriority(grip.Sender().Priority())
+
 	middlewear := NewRecoveryLogger(grip.NewLogger(sender))
 
 	next := func(w http.ResponseWriter, r *http.Request) {
@@ -110,7 +111,11 @@ func TestDefaultGripMiddlwareSetters(t *testing.T) {
 	assert.NotNil(l)
 
 	now := time.Now()
-	logger := grip.NewLogger(send.MakeInternalLogger())
+
+	sender := send.NewInternal(128)
+	sender.SetPriority(grip.Sender().Priority())
+
+	logger := grip.NewLogger(sender)
 
 	assert.NotEqual(logger, GetLogger(ctx))
 	assert.Zero(getRequestStartAt(ctx))
@@ -125,7 +130,6 @@ func TestDefaultGripMiddlwareSetters(t *testing.T) {
 	assert.True(id > 0, "%d", id)
 	assert.NotZero(getRequestStartAt(ctx))
 	assert.True(now.Before(getRequestStartAt(ctx)))
-
 }
 
 func TestLoggingAnnotationRetreive(t *testing.T) {
@@ -151,8 +155,9 @@ func TestLoggingAnnotationRetreive(t *testing.T) {
 func TestLoggingAnnotation(t *testing.T) {
 	assert := assert.New(t)
 
-	sender, err := send.NewInternalLogger("test", grip.Sender().Level())
-	assert.NoError(err)
+	sender := send.NewInternal(128)
+	sender.SetPriority(grip.Sender().Priority())
+
 	middlewear := NewRecoveryLogger(grip.NewLogger(sender))
 
 	var called bool

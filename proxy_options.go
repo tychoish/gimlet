@@ -36,8 +36,8 @@ func (opts *ProxyOptions) Validate() error {
 	}
 
 	catcher := &erc.Collector{}
-	catcher.When(len(opts.TargetPool) == 0 && opts.FindTarget == nil, ers.Error("must specify a way to resolve target host"))
-	catcher.When(len(opts.TargetPool) >= 1 && opts.FindTarget != nil, ers.Error("cannot specify more than one target resolution option"))
+	catcher.If(len(opts.TargetPool) == 0 && opts.FindTarget == nil, ers.Error("must specify a way to resolve target host"))
+	catcher.If(len(opts.TargetPool) >= 1 && opts.FindTarget != nil, ers.Error("cannot specify more than one target resolution option"))
 	return catcher.Resolve()
 }
 

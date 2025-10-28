@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/tychoish/grip"
 	"github.com/tychoish/grip/level"
-	"github.com/tychoish/grip/send"
 )
 
 // AppSuite contains tests of the APIApp system. Tests of the route
@@ -41,8 +40,7 @@ func TestDefaultAppSuite(t *testing.T) {
 func (s *AppSuite) SetupTest() {
 	s.app = s.constructor()
 	s.app.AddMiddleware(MakeRecoveryLogger())
-	err := grip.Sender().SetLevel(send.LevelInfo{Default: level.Debug, Threshold: level.Info})
-	s.NoError(err)
+	grip.Sender().SetPriority(level.Debug)
 }
 
 func (s *AppSuite) TestDefaultValuesAreSet() {
@@ -273,7 +271,6 @@ func (s *AppSuite) TestResolveWithInvalidMiddleware() {
 func (s *AppSuite) TestResolveWithInvalidWrappers() {
 	s.app.wrappers = append(s.app.wrappers, 1, true, "wat")
 	s.Error(s.app.Resolve())
-
 }
 
 func (s *AppSuite) TestResolveWithInvalidRouteWrappers() {

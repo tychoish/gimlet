@@ -48,19 +48,19 @@ type ServerConfig struct {
 // the configuration.
 func (c *ServerConfig) Validate() error {
 	catcher := &erc.Collector{}
-	catcher.When(c.TLS != nil && c.TLS.Certificates == nil, ers.Error("tls config specified without certificates"))
-	catcher.When(c.Handler == nil && c.App == nil, ers.Error("must specify a handler or a gimlet app"))
-	catcher.When(c.Handler != nil && c.App != nil && !c.handlerGenerated, ers.Error("can only specify a handler or an app"))
-	catcher.When(c.Address == "", ers.Error("must specify an address"))
+	catcher.If(c.TLS != nil && c.TLS.Certificates == nil, ers.Error("tls config specified without certificates"))
+	catcher.If(c.Handler == nil && c.App == nil, ers.Error("must specify a handler or a gimlet app"))
+	catcher.If(c.Handler != nil && c.App != nil && !c.handlerGenerated, ers.Error("can only specify a handler or an app"))
+	catcher.If(c.Address == "", ers.Error("must specify an address"))
 	catcher.Whenf(c.Timeout < time.Second, "must specify timeout greater than a second, '%s'", c.Timeout)
 	catcher.Whenf(c.Timeout > 10*time.Minute, "must specify timeout less than 10 minutes, '%s'", c.Timeout)
 
 	_, _, err := net.SplitHostPort(c.Address)
-	catcher.Add(err)
+	catcher.Push(err)
 
 	if c.App != nil {
 		c.Handler, err = c.App.Handler()
-		catcher.Add(err)
+		catcher.Push(err)
 		c.handlerGenerated = true
 	}
 

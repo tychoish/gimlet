@@ -175,13 +175,13 @@ func (m *userManager) GetUserByToken(ctx context.Context, token string) (gimlet.
 func (m *userManager) reauthorizeGroup(accessToken, refreshToken string) error {
 	catcher := &erc.Collector{}
 	err := m.doValidateAccessToken(accessToken)
-	erc.Whenf(catcher, err != nil, "invalid access token: %w", err)
+	catcher.Whenf(err != nil, "invalid access token: %w", err)
 	if err == nil {
 		user, err := m.generateUserFromInfo(accessToken, refreshToken)
-		erc.Whenf(catcher, err != nil, "could not generate user from Okta user info: %w", err)
+		catcher.Whenf(err != nil, "could not generate user from Okta user info: %w", err)
 		if err == nil {
 			_, err = m.cache.Put(user)
-			erc.Whenf(catcher, err != nil, "could not update reauthorized user in cache: %w", err)
+			catcher.Whenf(err != nil, "could not update reauthorized user in cache: %w", err)
 			if err == nil {
 				return nil
 			}
@@ -215,10 +215,10 @@ func (m *userManager) reauthorizeID(username string, tokens *tokenResponse) erro
 	}
 	catcher := &erc.Collector{}
 	user, err := makeUserFromIDToken(idToken, tokens.AccessToken, tokens.RefreshToken, m.reconciliateID)
-	erc.Whenf(catcher, err != nil, "could not generate user from Okta ID token: %w", err)
+	catcher.Whenf(err != nil, "could not generate user from Okta ID token: %w", err)
 	if err == nil {
 		_, err = m.cache.Put(user)
-		erc.Whenf(catcher, err != nil, "could not update reauthorized user in cache: %w", err)
+		catcher.Whenf(err != nil, "could not update reauthorized user in cache: %w", err)
 		if err == nil {
 			return nil
 		}
@@ -244,7 +244,7 @@ func (m *userManager) ReauthorizeUser(user gimlet.User) error {
 			return errors.Errorf("user '%s' cannot reauthorize because user is missing access token", user.Username())
 		}
 		err := m.reauthorizeGroup(accessToken, refreshToken)
-		erc.Whenf(catcher, err != nil, "could not reauthorize user with current access token: %w", err)
+		catcher.Whenf(err != nil, "could not reauthorize user with current access token: %w", err)
 		if err == nil {
 			return nil
 		}
@@ -254,17 +254,17 @@ func (m *userManager) ReauthorizeUser(user gimlet.User) error {
 		return errors.Errorf("user '%s' cannot refresh tokens because refresh token is missing", user.Username())
 	}
 	tokens, err := m.refreshTokens(context.Background(), refreshToken)
-	erc.Whenf(catcher, err != nil, "could not refresh authorization tokens: %w", err)
+	catcher.Whenf(err != nil, "could not refresh authorization tokens: %w", err)
 	if err == nil {
 		if m.validateGroups {
 			err = m.reauthorizeGroup(tokens.AccessToken, tokens.RefreshToken)
-			erc.Whenf(catcher, err != nil, "could not reauthorize user after refreshing tokens: %w", err)
+			catcher.Whenf(err != nil, "could not reauthorize user after refreshing tokens: %w", err)
 			if err == nil {
 				return nil
 			}
 		} else {
 			err = m.reauthorizeID(user.Username(), tokens)
-			erc.Whenf(catcher, err != nil, "could not reauthorize user after refreshing tokens: %w", err)
+			catcher.Whenf(err != nil, "could not reauthorize user after refreshing tokens: %w", err)
 			if err == nil {
 				return nil
 			}
@@ -528,19 +528,19 @@ func getCookies(r *http.Request) (nonce, state, requestURI string, err error) {
 		if cookie.Name == nonceCookieName {
 			nonce, err = url.QueryUnescape(cookie.Value)
 			if err != nil {
-				erc.Whenf(catcher, err != nil, "could not decode nonce cookie: %w", err)
+				catcher.Whenf(err != nil, "could not decode nonce cookie: %w", err)
 			}
 		}
 		if cookie.Name == stateCookieName {
 			state, err = url.QueryUnescape(cookie.Value)
 			if err != nil {
-				erc.Whenf(catcher, err != nil, "could not decode state cookie: %w", err)
+				catcher.Whenf(err != nil, "could not decode state cookie: %w", err)
 			}
 		}
 		if cookie.Name == requestURICookieName {
 			requestURI, err = url.QueryUnescape(cookie.Value)
 			if err != nil {
-				erc.Whenf(catcher, err != nil, "could not decode requestURI cookie: %w", err)
+				catcher.Whenf(err != nil, "could not decode requestURI cookie: %w", err)
 			}
 		}
 	}

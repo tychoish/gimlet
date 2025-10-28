@@ -47,7 +47,7 @@ func (r *ResponsePages) Validate() error {
 			continue
 		}
 
-		catcher.Add(p.Validate())
+		catcher.Push(p.Validate())
 	}
 
 	return catcher.Resolve()

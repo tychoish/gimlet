@@ -2,7 +2,6 @@ package gimlet
 
 import (
 	"github.com/tychoish/fun/erc"
-	"github.com/tychoish/fun/ers"
 	"github.com/tychoish/grip"
 	"github.com/tychoish/grip/message"
 )
@@ -21,7 +20,7 @@ type BasicUserOptions struct {
 
 func NewBasicUserOptions(id string) (BasicUserOptions, error) {
 	catcher := &erc.Collector{}
-	catcher.When(id == "", ers.Error("ID must not be empty"))
+	catcher.When(id == "", "ID must not be empty")
 	if !catcher.Ok() {
 		return BasicUserOptions{}, catcher.Resolve()
 	}
@@ -110,6 +109,7 @@ func (u *BasicUser) Roles() []string {
 	copy(out, u.AccessRoles)
 	return out
 }
+
 func (u *BasicUser) HasPermission(opts PermissionOpts) bool {
 	if u.roleManager == nil {
 		return false

@@ -13,8 +13,10 @@ import (
 	"github.com/tychoish/grip/send"
 )
 
-type writeResponseBaseFunc func(http.ResponseWriter, int, interface{})
-type writeResponseFunc func(http.ResponseWriter, interface{})
+type (
+	writeResponseBaseFunc func(http.ResponseWriter, int, interface{})
+	writeResponseFunc     func(http.ResponseWriter, interface{})
+)
 
 func TestResponseWritingFunctions(t *testing.T) {
 	assert := assert.New(t)
@@ -142,13 +144,13 @@ func (r mangledResponseWriter) Write(b []byte) (int, error) { return 0, errors.N
 
 func TestWriteResponseErrorLogs(t *testing.T) {
 	defer func(s send.Sender) {
-		grip.SetGlobalLogger(grip.NewLogger(s))
+		grip.SetSender(s)
 	}(grip.Sender())
 	assert := assert.New(t)
-	sender := send.MakeInternalLogger()
-	rw := mangledResponseWriter{httptest.NewRecorder()}
-	grip.SetGlobalLogger(grip.NewLogger(sender))
+	sender := send.NewInternal(20)
+	grip.SetSender(sender)
 
+	rw := mangledResponseWriter{httptest.NewRecorder()}
 	assert.False(sender.HasMessage())
 	writeResponse(JSON, rw, 200, []byte("foo"))
 	assert.True(sender.HasMessage())

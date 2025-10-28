@@ -407,16 +407,16 @@ func (m *mongoBackedRoleManager) resourcesPipeline(resourceType string, resource
 func (m *mongoBackedRoleManager) Clear() error {
 	ctx := context.Background()
 	catcher := &erc.Collector{}
-	catcher.Add(m.client.Database(m.db).Collection(m.scopeColl).Drop(ctx))
-	catcher.Add(m.client.Database(m.db).Collection(m.roleColl).Drop(ctx))
+	catcher.Push(m.client.Database(m.db).Collection(m.scopeColl).Drop(ctx))
+	catcher.Push(m.client.Database(m.db).Collection(m.roleColl).Drop(ctx))
 	cmd := map[string]string{
 		"create": m.scopeColl,
 	}
-	catcher.Add(m.client.Database(m.db).RunCommand(context.Background(), cmd).Err())
+	catcher.Push(m.client.Database(m.db).RunCommand(context.Background(), cmd).Err())
 	cmd = map[string]string{
 		"create": m.roleColl,
 	}
-	catcher.Add(m.client.Database(m.db).RunCommand(context.Background(), cmd).Err())
+	catcher.Push(m.client.Database(m.db).RunCommand(context.Background(), cmd).Err())
 	return catcher.Resolve()
 }
 
@@ -767,7 +767,7 @@ func (b *base) isValidPermission(permission string) bool {
 func (b *base) IsValidPermissions(permissions gimlet.Permissions) error {
 	catcher := &erc.Collector{}
 	for permission := range permissions {
-		erc.Whenf(catcher, !b.isValidPermission(permission), "'%s' is not a valid permission", permission)
+		catcher.Whenf(!b.isValidPermission(permission), "'%s' is not a valid permission", permission)
 	}
 	return catcher.Resolve()
 }

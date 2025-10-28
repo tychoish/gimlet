@@ -25,16 +25,16 @@ func AssembleHandlerGorilla(router *mux.Router, apps ...*APIApp) (http.Handler, 
 	for _, app := range apps {
 		if app.prefix != "" {
 			if _, ok := seenPrefixes[app.prefix]; ok {
-				catcher.Add(errors.Errorf("route prefix '%s' defined more than once", app.prefix))
+				catcher.Push(errors.Errorf("route prefix '%s' defined more than once", app.prefix))
 			}
 			seenPrefixes[app.prefix] = struct{}{}
 
 			r := router.PathPrefix(app.prefix).Subrouter()
-			catcher.Add(app.attachRoutes(r, false)) // this adds wrapper middlware
+			catcher.Push(app.attachRoutes(r, false)) // this adds wrapper middlware
 			router.PathPrefix(app.prefix).Handler(buildNegroni(r, app.middleware...))
 		} else {
 			mws = append(mws, app.middleware...)
-			catcher.Add(app.attachRoutes(router, true))
+			catcher.Push(app.attachRoutes(router, true))
 		}
 	}
 
@@ -54,7 +54,7 @@ func AssembleHandlerChi(router *chi.Mux, apps ...*APIApp) (out http.Handler, err
 
 	defer func() {
 		if p := recover(); p != nil {
-			catcher.Add(fmt.Errorf("chi.Mux encountered error: %+v", p))
+			catcher.Push(fmt.Errorf("chi.Mux encountered error: %+v", p))
 		}
 		err = catcher.Resolve()
 		if !catcher.Ok() {
@@ -67,16 +67,16 @@ func AssembleHandlerChi(router *chi.Mux, apps ...*APIApp) (out http.Handler, err
 	for _, app := range apps {
 		if app.prefix != "" {
 			if _, ok := seenPrefixes[app.prefix]; ok {
-				catcher.Add(errors.Errorf("route prefix '%s' defined more than once", app.prefix))
+				catcher.Push(errors.Errorf("route prefix '%s' defined more than once", app.prefix))
 			}
 			seenPrefixes[app.prefix] = struct{}{}
 
 			router.With(convertMidlewares(app.middleware...)...).Route(app.prefix, func(r chi.Router) {
-				catcher.Add(app.attachRoutes(r, false)) // this adds wrapper middlware
+				catcher.Push(app.attachRoutes(r, false)) // this adds wrapper middlware
 			})
 		} else {
 			mws = append(mws, app.middleware...)
-			catcher.Add(app.attachRoutes(router, true))
+			catcher.Push(app.attachRoutes(router, true))
 		}
 	}
 
@@ -178,7 +178,7 @@ func (a *APIApp) Merge(apps ...*APIApp) error {
 	for _, app := range apps {
 		if app.prefix != "" {
 			if _, ok := seenPrefixes[app.prefix]; ok {
-				catcher.Add(fmt.Errorf("route prefix '%s' defined more than once", app.prefix))
+				catcher.Push(fmt.Errorf("route prefix '%s' defined more than once", app.prefix))
 			}
 			seenPrefixes[app.prefix] = struct{}{}
 
@@ -194,7 +194,7 @@ func (a *APIApp) Merge(apps ...*APIApp) error {
 		} else if app.middleware == nil {
 			for _, r := range app.routes {
 				if a.containsRoute(r.route, r.version, r.methods) {
-					catcher.Add(fmt.Errorf("cannot merge route '%s' with existing application that already has this route defined", r.route))
+					catcher.Push(fmt.Errorf("cannot merge route '%s' with existing application that already has this route defined", r.route))
 				}
 			}
 
@@ -202,7 +202,7 @@ func (a *APIApp) Merge(apps ...*APIApp) error {
 		} else {
 			for _, route := range app.routes {
 				if a.containsRoute(route.route, route.version, route.methods) {
-					catcher.Add(fmt.Errorf("cannot merge route '%s' with existing application that already has this route defined", route.route))
+					catcher.Push(fmt.Errorf("cannot merge route '%s' with existing application that already has this route defined", route.route))
 				}
 
 				r := a.Route().Route(route.route).Version(route.version)

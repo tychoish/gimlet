@@ -156,7 +156,7 @@ func tryManagers(managerFunc func(UserManager) (success bool, err error), manage
 		if success {
 			return nil
 		}
-		catcher.Add(err)
+		catcher.Push(err)
 	}
 	return catcher.Resolve()
 }

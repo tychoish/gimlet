@@ -109,7 +109,7 @@ func (opts CreationOpts) validate() error {
 	catcher := &erc.Collector{}
 
 	if opts.URL == "" || opts.UserPath == "" || opts.ServicePath == "" {
-		catcher.Add(errors.Errorf("URL ('%s'), UserPath ('%s') and ServicePath ('%s') must be provided",
+		catcher.Push(errors.Errorf("URL ('%s'), UserPath ('%s') and ServicePath ('%s') must be provided",
 			opts.URL, opts.UserPath, opts.ServicePath))
 	}
 
@@ -122,7 +122,7 @@ func (opts CreationOpts) validate() error {
 	catcher.When(opts.UserGroup == "", "LDAP user group cannot be empty")
 
 	if opts.UserCache == nil && opts.ExternalCache == nil {
-		catcher.Add(errors.New("must specify user cache"))
+		catcher.Push(errors.New("must specify user cache"))
 	}
 
 	return catcher.Resolve()
@@ -488,15 +488,15 @@ func (u *userService) getUserFromLDAP(username string) (gimlet.User, error) {
 				[]string{},
 				nil))
 		if err != nil {
-			catcher.Add(errors.Wrap(err, "problem searching ldap"))
+			catcher.Push(errors.Wrap(err, "problem searching ldap"))
 			continue
 		}
 		if len(result.Entries) == 0 {
-			catcher.Add(errors.Errorf("no entry returned for user '%s'", username))
+			catcher.Push(errors.Errorf("no entry returned for user '%s'", username))
 			continue
 		}
 		if len(result.Entries[0].Attributes) == 0 {
-			catcher.Add(errors.Errorf("entry's attributes empty for user '%s'", username))
+			catcher.Push(errors.Errorf("entry's attributes empty for user '%s'", username))
 			continue
 		}
 

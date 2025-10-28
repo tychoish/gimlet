@@ -49,7 +49,7 @@ func (a *APIApp) Resolve() error {
 		case Middleware:
 			continue
 		default:
-			catcher.Add(fmt.Errorf("middleware of type %T is not supported as middleware", mw))
+			catcher.Push(fmt.Errorf("middleware of type %T is not supported as middleware", mw))
 		}
 	}
 
@@ -156,7 +156,7 @@ func (a *APIApp) attachRoutes(muxer interface{}, addAppPrefix bool) error {
 	catcher := &erc.Collector{}
 	for _, route := range a.routes {
 		if !route.IsValid() {
-			catcher.Add(fmt.Errorf("%s is not a valid route, skipping", route))
+			catcher.Push(fmt.Errorf("%s is not a valid route, skipping", route))
 			continue
 		}
 
@@ -171,7 +171,7 @@ func (a *APIApp) attachRoutes(muxer interface{}, addAppPrefix bool) error {
 		} else if a.NoVersions {
 			routeString = route.resolveLegacyRoute(a, addAppPrefix)
 		} else {
-			catcher.Add(fmt.Errorf("skipping '%s', because of versioning error", route))
+			catcher.Push(fmt.Errorf("skipping '%s', because of versioning error", route))
 			continue
 		}
 
@@ -186,7 +186,7 @@ func (a *APIApp) attachRoutes(muxer interface{}, addAppPrefix bool) error {
 				continue
 			default:
 				invalidMiddleware = true
-				catcher.Add(fmt.Errorf("mw#%d for %s is %T which is not supported", idx, route.String(), mw))
+				catcher.Push(fmt.Errorf("mw#%d for %s is %T which is not supported", idx, route.String(), mw))
 			}
 		}
 

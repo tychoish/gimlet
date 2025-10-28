@@ -33,27 +33,27 @@ func (umc *UserMiddlewareConfiguration) Validate() error {
 
 	if !umc.SkipCookie {
 		if umc.CookieName == "" {
-			catcher.Add(ers.Error("must specify cookie name when cookie authentication is enabled"))
+			catcher.Push(ers.Error("must specify cookie name when cookie authentication is enabled"))
 		}
 
 		if umc.CookieTTL < time.Second {
-			catcher.Add(ers.Error("cookie timeout is less than a second"))
+			catcher.Push(ers.Error("cookie timeout is less than a second"))
 		}
 
 		if umc.CookiePath == "" {
 			umc.CookiePath = "/"
 		} else if !strings.HasPrefix(umc.CookiePath, "/") {
-			catcher.Add(ers.Error("cookie path must begin with '/'"))
+			catcher.Push(ers.Error("cookie path must begin with '/'"))
 		}
 	}
 
 	if !umc.SkipHeaderCheck {
 		if umc.HeaderUserName == "" {
-			catcher.Add(ers.Error("when header auth is enabled, must specify a header user name"))
+			catcher.Push(ers.Error("when header auth is enabled, must specify a header user name"))
 		}
 
 		if umc.HeaderKeyName == "" {
-			catcher.Add(ers.Error("when header auth is enabled, must specify a header key name"))
+			catcher.Push(ers.Error("when header auth is enabled, must specify a header key name"))
 		}
 	}
 
